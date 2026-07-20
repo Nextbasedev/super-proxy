@@ -1,12 +1,12 @@
-# Deploy — Nextbase Model Gateway
+# Deploy — Super Proxy
 
 This repo is built on the Daxit 4GB server as a dev machine. Production should run on a separate server.
 
 ## Server setup
 
 ```bash
-git clone <repo> /opt/model-gateway
-cd /opt/model-gateway
+git clone <repo> /opt/super-proxy
+cd /opt/super-proxy
 npm ci
 npm run build
 cp .env.example .env
@@ -18,15 +18,15 @@ npm run db:migrate
 
 ```ini
 [Unit]
-Description=Nextbase Model Gateway
+Description=Super Proxy
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/model-gateway
-EnvironmentFile=/opt/model-gateway/.env
-ExecStart=/usr/bin/node /opt/model-gateway/dist/server.js
+WorkingDirectory=/opt/super-proxy
+EnvironmentFile=/opt/super-proxy/.env
+ExecStart=/usr/bin/node /opt/super-proxy/dist/server.js
 Restart=always
 RestartSec=5
 User=root
@@ -38,7 +38,7 @@ WantedBy=multi-user.target
 ## Import current key-dispenser keys once
 
 ```bash
-DATABASE_PATH=/opt/model-gateway/data/model-gateway.sqlite npm exec tsx scripts/import-key-dispenser.ts /path/to/key-dispenser/keys.json
+DATABASE_PATH=/opt/super-proxy/data/super-proxy.sqlite npm exec tsx scripts/import-key-dispenser.ts /path/to/key-dispenser/keys.json
 ```
 
 ## API client config
@@ -47,14 +47,14 @@ Anthropic-compatible clients:
 
 ```bash
 ANTHROPIC_BASE_URL=https://gateway-domain.example
-ANTHROPIC_API_KEY=nbmg_xxx
+ANTHROPIC_API_KEY=sp_xxx
 ```
 
 OpenAI-compatible clients:
 
 ```bash
 OPENAI_BASE_URL=https://gateway-domain.example/v1
-OPENAI_API_KEY=nbmg_xxx
+OPENAI_API_KEY=sp_xxx
 ```
 
 
@@ -66,13 +66,13 @@ Recommended flow:
 
 ```bash
 # on dev machine
-git remote add origin git@github.com:<org>/model-gateway.git
+git remote add origin git@github.com:<org>/super-proxy.git
 git branch -M main
 git push -u origin main
 
 # on production server
-git clone git@github.com:<org>/model-gateway.git /opt/model-gateway
-cd /opt/model-gateway
+git clone git@github.com:<org>/super-proxy.git /opt/super-proxy
+cd /opt/super-proxy
 npm ci
 npm run build
 npm run db:migrate
@@ -81,12 +81,12 @@ npm run db:migrate
 For updates:
 
 ```bash
-cd /opt/model-gateway
+cd /opt/super-proxy
 git pull --ff-only
 npm ci
 npm run build
 npm run db:migrate
-systemctl restart model-gateway
+systemctl restart super-proxy
 ```
 
 Keep `.env`, SQLite data, and secrets only on the production server.
@@ -97,10 +97,10 @@ Keep `.env`, SQLite data, and secrets only on the production server.
 Production hostname:
 
 ```text
-nextbase-model-gateway.infinitycorp.tech
+localhost:8080
 ```
 
-Route this through the existing Cloudflare Tunnel on `nextbase-prod-01` to:
+Route this through the existing Cloudflare Tunnel on `your-server` to:
 
 ```text
 http://127.0.0.1:4580
@@ -119,7 +119,7 @@ No separate setup needed.
 
 ### Enable compression
 
-Add to the NBMG `.env` file:
+Add to the Super Proxy `.env` file:
 
 ```bash
 HEADROOM_ENABLED=true

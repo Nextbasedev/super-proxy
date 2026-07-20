@@ -1,5 +1,5 @@
-# Headroom context-compression sidecar for NBMG.
-# Runs alongside the gateway. In production, prefer the main model-gateway
+# Headroom context-compression sidecar for Super Proxy.
+# Runs alongside the gateway. In production, prefer the main super-proxy
 # docker-compose stack and set HEADROOM_URL=http://headroom-proxy:8899.
 #
 # This standalone compose is for local/manual testing only. It publishes the

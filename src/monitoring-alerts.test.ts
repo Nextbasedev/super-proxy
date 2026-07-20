@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import os from 'node:os';
 import path from 'node:path';
 
-const dbPath = path.join(os.tmpdir(), `model-gateway-alerts-${process.pid}-${Date.now()}.sqlite`);
+const dbPath = path.join(os.tmpdir(), `super-proxy-alerts-${process.pid}-${Date.now()}.sqlite`);
 process.env.DATABASE_PATH = dbPath;
 process.env.DEV_ADMIN_KEY = 'test-admin';
 // No webhook configured → delivery falls back to legacy alert() (DB-only here).

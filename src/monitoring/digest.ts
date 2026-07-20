@@ -121,7 +121,7 @@ export async function postDigestIfDue(now = new Date()): Promise<boolean> {
   const pct = (x: number | null) => x == null ? '—' : (x * 100).toFixed(1) + '%';
   const trend = d.cacheHitRate != null && d.prevCacheHitRate != null ? (d.cacheHitRate >= d.prevCacheHitRate ? '↑' : '↓') : '';
   const lines = [
-    `**📊 NBMG weekly digest** · ${d.weekStart} → ${d.weekEnd}`,
+    `**📊 Super Proxy weekly digest** · ${d.weekStart} → ${d.weekEnd}`,
     `Requests: **${d.requests.toLocaleString()}** · Metered spend: **$${d.meteredUsd}** · Notional (subs): **$${d.notionalUsd}**`,
     `Cache hit rate: **${pct(d.cacheHitRate)}** ${trend} (prev ${pct(d.prevCacheHitRate)})`,
     `Critical alerts: **${d.criticalAlerts}**`,

@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 // resolveGeminiThinkingLevel imports gemini-pool which needs DB env set
-const dbPath = path.join(os.tmpdir(), `model-gateway-gemini-thinking-${process.pid}-${Date.now()}.sqlite`);
+const dbPath = path.join(os.tmpdir(), `super-proxy-gemini-thinking-${process.pid}-${Date.now()}.sqlite`);
 process.env.DATABASE_PATH = dbPath;
 
 import { resolveGeminiThinkingLevel } from './proxy/gemini.js';

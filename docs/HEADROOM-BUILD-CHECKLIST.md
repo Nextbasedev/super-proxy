@@ -1,11 +1,11 @@
-# NBMG Headroom Compression — Build Checklist
+# Super Proxy Headroom Compression — Build Checklist
 
 ## Summary
 
-Gateway-level context compression for the NBMG model gateway. A shared Headroom Python sidecar compresses LLM request payloads (tool outputs, conversation history) before forwarding to upstream providers. 50-74% input token savings with zero accuracy loss, fully transparent to fleet users. Fallback-safe — if compression fails, requests proceed unchanged.
+Gateway-level context compression for the Super Proxy model gateway. A shared Headroom Python sidecar compresses LLM request payloads (tool outputs, conversation history) before forwarding to upstream providers. 50-74% input token savings with zero accuracy loss, fully transparent to fleet users. Fallback-safe — if compression fails, requests proceed unchanged.
 
 **Key decisions:**
-- Headroom Python sidecar alongside NBMG (Docker compose, shared instance)
+- Headroom Python sidecar alongside Super Proxy (Docker compose, shared instance)
 - OpenAI chat/completions + Anthropic messages + fusion entry-point (xAI Responses excluded)
 - Global toggle + per-provider skip list + per-user dashboard override
 - Compression metrics in existing `usage_events` table with `compression_status` enum
@@ -81,7 +81,7 @@ Gateway-level context compression for the NBMG model gateway. A shared Headroom 
 37. [ ] Cache user preference in-memory (same pattern as existing user field lookups, no extra DB query)
 
 ## Dashboard UI
-38. [ ] Add "Context Compression" toggle to user settings in NBMG admin dashboard
+38. [ ] Add "Context Compression" toggle to user settings in Super Proxy admin dashboard
 39. [ ] `PATCH /admin/users/:id` — accept `compression_enabled` field
 40. [ ] Display compression status on user detail page (enabled/disabled)
 
@@ -118,16 +118,16 @@ Gateway-level context compression for the NBMG model gateway. A shared Headroom 
 ---
 
 # Phase 4 — Production Deployment & Rollout
-*Goal: Live on production NBMG with graduated rollout*
+*Goal: Live on production Super Proxy with graduated rollout*
 
 ## Sidecar Deployment
-60. [ ] Deploy Headroom sidecar container on production NBMG server
+60. [ ] Deploy Headroom sidecar container on production Super Proxy server
 61. [ ] Verify health check, resource usage (RAM, CPU) under idle
 62. [ ] Configure Docker restart policy (`unless-stopped`) and log rotation for sidecar
-63. [ ] Add sidecar health to existing NBMG monitoring (health endpoint check)
+63. [ ] Add sidecar health to existing Super Proxy monitoring (health endpoint check)
 
 ## Graduated Rollout
-64. [ ] Enable `HEADROOM_ENABLED=true` on production NBMG
+64. [ ] Enable `HEADROOM_ENABLED=true` on production Super Proxy
 65. [ ] Stage 1: Enable for staging group users only (set `compression_enabled=true` per-user in DB)
 66. [ ] Monitor: check `compression_status` distribution, `tokens_saved` totals, error/timeout rate
 67. [ ] Stage 2: Enable for leads group users
@@ -146,7 +146,7 @@ Gateway-level context compression for the NBMG model gateway. A shared Headroom 
 # Later (Not in V1)
 - [ ] Port SmartCrusher (JSON → schema+CSV) natively to TypeScript — eliminate Python dependency
 - [ ] xAI Responses API support (convert `input` items to OpenAI messages format for compression)
-- [ ] Compression savings chart on NBMG admin dashboard (per-user, per-provider, daily trends)
+- [ ] Compression savings chart on Super Proxy admin dashboard (per-user, per-provider, daily trends)
 - [ ] Discord/Telegram alerting on compression anomaly spikes (>5% timeout rate in 5 min window)
 - [ ] Headroom CCR (reversible retrieval) for IntelligentContext turn-dropping in long sessions
 - [ ] Per-provider compression config (different thresholds/settings for different upstream providers)
@@ -201,5 +201,5 @@ Gateway-level context compression for the NBMG model gateway. A shared Headroom 
 | 5 | Negative savings | Discard + log `negative` status | Never make things worse. Log for threshold tuning. |
 | 6 | Timeout | 5s sync with logged timeout events | Compression takes 0.1-0.5s typical. 5s is generous. Timeouts get `timeout` status in DB. |
 | 7 | User opt-out | Dashboard toggle (`compression_enabled` in `users` table) | Admin-controlled, auditable, no client-side headers. |
-| 8 | Rollout | Graduated: staging → leads → default | Mirrors existing openclaw-internal group rollout. Each stage soaks before expansion. |
+| 8 | Rollout | Graduated: staging → leads → default | Mirrors existing agent-runtime group rollout. Each stage soaks before expansion. |
 | 9 | Anomaly logging | `compression_status` enum in `usage_events` | Single column captures all states. Dashboard can query `WHERE compression_status = 'timeout'`. |

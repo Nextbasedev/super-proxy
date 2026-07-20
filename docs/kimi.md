@@ -1,13 +1,13 @@
 # Kimi provider integration
 
-Kimi is a first-class subscription-style provider in Nextbase Model Gateway.
+Kimi is a first-class subscription-style provider in Super Proxy.
 
 ## Routes
 
 - OpenAI-compatible: `POST /v1/kimi/chat/completions`
 - Anthropic-compatible: `POST /v1/kimi/messages`
 
-Both require `Authorization: Bearer <nbmg_*>` at the gateway. The gateway forwards to `KIMI_UPSTREAM_URL` or `https://api.kimi.com/coding/v1` by default with the selected account secret as `Authorization: Bearer sk-kimi-...`.
+Both require `Authorization: Bearer <sp_*>` at the gateway. The gateway forwards to `KIMI_UPSTREAM_URL` or `https://api.kimi.com/coding/v1` by default with the selected account secret as `Authorization: Bearer sk-kimi-...`.
 
 For `/v1/kimi/messages`, the gateway forwards the client `anthropic-version` header when present and defaults to `2023-06-01` otherwise.
 

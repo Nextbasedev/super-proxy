@@ -11,10 +11,10 @@ Example:
 
 ```bash
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{"model":"gpt-oss-120b","messages":[{"role":"user","content":"pong"}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/cerebras/chat/completions
+  http://localhost:8080/v1/cerebras/chat/completions
 ```
 
 ## Model fallback

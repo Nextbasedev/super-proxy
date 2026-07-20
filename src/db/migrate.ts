@@ -1219,54 +1219,10 @@ export function migrate() {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
     CREATE INDEX IF NOT EXISTS idx_request_logs_expires_at ON request_logs(expires_at);
-
-    CREATE TABLE IF NOT EXISTS aside_gateways (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      url TEXT NOT NULL UNIQUE,
-      service_token TEXT NOT NULL,
-      label TEXT NOT NULL DEFAULT 'default',
-      enabled INTEGER NOT NULL DEFAULT 1,
-      recovery_url TEXT,
-      recovery_token TEXT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS aside_assignments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-      gateway_id INTEGER NOT NULL REFERENCES aside_gateways(id),
-      profile_label TEXT NOT NULL,
-      enabled INTEGER NOT NULL DEFAULT 1,
-      created_by_user_id INTEGER REFERENCES users(id),
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      revoked_at TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS aside_usage_log (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      account_id TEXT,
-      label TEXT,
-      mode TEXT NOT NULL CHECK(mode IN ('task','mcp')),
-      prompt_len INTEGER NOT NULL DEFAULT 0,
-      prompt_text TEXT,
-      status TEXT NOT NULL CHECK(status IN ('ok','denied','error')),
-      error_code TEXT,
-      duration_ms INTEGER,
-      expires_at TEXT NOT NULL DEFAULT '1970-01-01T00:00:00.000Z',
-      ts TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_aside_usage_log_user_ts ON aside_usage_log(user_id, ts);
-    CREATE INDEX IF NOT EXISTS idx_aside_usage_log_expires_at ON aside_usage_log(expires_at);
   `);
 
-  // Aside task prompts follow the same opt-in logging and expiry contract as request_logs.
-  addColumn('aside_usage_log', 'expires_at', "TEXT NOT NULL DEFAULT '1970-01-01T00:00:00.000Z'");
+  // Aside / fleet control-plane tables intentionally omitted from Super Proxy OSS.
 
-  // Multi-Mac: per-gateway recovery endpoints (additive, nullable)
-  addColumn('aside_gateways', 'recovery_url', 'TEXT');
-  addColumn('aside_gateways', 'recovery_token', 'TEXT');
-  db.exec('CREATE INDEX IF NOT EXISTS idx_aside_usage_log_expires_at ON aside_usage_log(expires_at)');
 
   // Per-request cache-hit columns for existing rollup tables (idempotent).
   // Backfilled naturally on the next rollup recompute of live buckets; older

@@ -221,7 +221,7 @@ async function handleSerpSearch(req: any, reply: any, auth: any, body: any, quer
 
 // SearXNG-compatible adapter: lets SearXNG-compatible `web_search` clients
 // (`searxng`, the only one accepting an arbitrary base URL with no API key)
-// route through NBMG to our real Serper Google SERP, fully metered.
+// route through Super Proxy to our real Serper Google SERP, fully metered.
 //
 // Contract (from the SearXNG client contract):
 //  - GET, path must end in `/search` (client blindly appends it to baseUrl).

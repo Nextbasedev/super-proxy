@@ -1,6 +1,6 @@
 # Fusion — Architecture
 
-Multi-model deliberation for Nextbase Model Gateway.
+Multi-model deliberation for Super Proxy.
 
 ---
 
@@ -71,7 +71,7 @@ The overhead is negligible: `app.inject()` is an in-memory dispatch, no TCP, no 
 POST /v1/fusion/chat/completions
 ```
 
-Auth: `Authorization: Bearer nbmg_*` (same as every other endpoint).
+Auth: `Authorization: Bearer sp_*` (same as every other endpoint).
 
 ### Request
 
@@ -448,7 +448,7 @@ The sub-call events have the actual provider/model for accurate per-provider cos
 
 ## Policy & Limits
 
-- **Auth:** Single `nbmg_*` token, checked once at the fusion endpoint. Sub-calls forward the same token via `app.inject()` headers.
+- **Auth:** Single `sp_*` token, checked once at the fusion endpoint. Sub-calls forward the same token via `app.inject()` headers.
 - **Model access:** Checked per-panel-model before dispatch. If user can't use `anthropic/claude-sonnet-*`, that model is dropped from the panel.
 - **Provider limits:** Each sub-call checks its provider's limits independently. If user is over their Anthropic daily cap, the Anthropic panel call returns 429 and is treated as a failed panel member.
 - **Token-level caps:** Apply across all sub-calls (they share the same `token_id`). A generous daily cap still works because sub-calls record usage as they complete.

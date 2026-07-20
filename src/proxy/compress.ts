@@ -1,5 +1,5 @@
 /**
- * Headroom context compression middleware for NBMG.
+ * Headroom context compression middleware for Super Proxy.
  *
  * Intercepts chat/completions and /v1/messages requests, compresses tool outputs
  * and conversation history via the Headroom sidecar, and replaces the messages

@@ -43,7 +43,7 @@ function fusionModelListing(alias: string, created: number): Record<string, unkn
     id: `fusion/${alias}`,
     object: 'model',
     created,
-    owned_by: 'fusion',
+    owned_by: 'super-proxy-fusion',
     provider: 'fusion',
     endpoint: catalog.endpoint,
     api: catalog.api,

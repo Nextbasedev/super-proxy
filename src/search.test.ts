@@ -13,7 +13,7 @@ const { registerSearchProxy } = await import('./proxy/search.js');
 
 migrate();
 const db = getDb();
-const rawToken = 'nbmg_search_test_token';
+const rawToken = 'sp_search_test_token';
 const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled,full_body_logging) VALUES ('search@example.com','developer',0,1,1)").run().lastInsertRowid);
 const tokenId = Number(db.prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled) VALUES (?,?,?,?,1)').run(userId, 'search-token', sha256(rawToken), rawToken.slice(0, 14)).lastInsertRowid);
 

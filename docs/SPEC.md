@@ -1,10 +1,10 @@
-# Nextbase Model Gateway — Build Spec
+# Super Proxy — Build Spec
 
 Internal AI model gateway for Nextbase founders and team. Exposes Anthropic-compatible and OpenAI/Codex-compatible APIs while routing behind the scenes across multiple Anthropic Max/OAuth keys and Codex/OpenAI accounts.
 
 ## Core Decisions
-- Name: Nextbase Model Gateway
-- Repo/project: `model-gateway`
+- Name: Super Proxy
+- Repo/project: `super-proxy`
 - Stack: Node.js + TypeScript
 - Storage: SQLite on deployment server; dev data local only
 - API exposure: public HTTPS eventually, every request requires personal proxy token

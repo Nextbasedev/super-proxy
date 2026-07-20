@@ -25,7 +25,7 @@ function resetTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = 'nbmg_anthropic_test_token') {
+function seedUserAndToken(raw = 'sp_anthropic_test_token') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled,full_body_logging) VALUES ('dev@example.com','developer',0,1,0)").run().lastInsertRowid);
   db.prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(userId, 'anthropic', 'allow_all');

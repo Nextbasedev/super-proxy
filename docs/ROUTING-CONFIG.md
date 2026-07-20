@@ -1,10 +1,10 @@
-# Routing OpenClaw / Ampere through Nextbase Model Gateway
+# Routing OpenClaw / Ampere through Super Proxy
 
 This guide is for any developer who needs to point an OpenClaw install (local
-or Ampere-hosted) at the Nextbase Model Gateway for Anthropic and/or Codex
+or Ampere-hosted) at the Super Proxy for Anthropic and/or Codex
 traffic.
 
-> **Public base URL:** `https://nextbase-model-gateway.infinitycorp.tech`
+> **Public base URL:** `http://localhost:8080`
 >
 > The gateway exposes:
 > - Anthropic-compatible: `POST /v1/messages`
@@ -17,16 +17,16 @@ traffic.
 > - Fusion (multi-model): `POST /v1/fusion/chat/completions`
 > - Model discovery:     `GET /v1/models`
 >
-> Auth: every request must send `Authorization: Bearer <nbmg_*>` (preferred).
+> Auth: every request must send `Authorization: Bearer <sp_*>` (preferred).
 > The gateway also accepts the same token via `x-api-key` and `x-goog-api-key`
 > for compatibility, but client code should default to the Authorization header.
 
 ## 1. Get a personal proxy token
 
-1. Visit `https://nextbase-model-gateway.infinitycorp.tech/`.
+1. Visit `http://localhost:8080/`.
 2. Sign in with Google (must be on the allowlist — ask an admin to add you).
 3. Open **My API tokens** and create a new token.
-4. The token starts with `nbmg_`. Treat it like a secret. Never commit it.
+4. The token starts with `sp_`. Treat it like a secret. Never commit it.
 
 The same token works for Anthropic (`/v1/messages`), Codex
 (`/v1/responses`, `/v1/chat/completions`), image generation
@@ -57,7 +57,7 @@ Patch the Anthropic provider in **both** files:
 "models": {
   "providers": {
     "anthropic": {
-      "baseUrl": "https://nextbase-model-gateway.infinitycorp.tech",
+      "baseUrl": "http://localhost:8080",
       "authHeader": true,
       "models": []
     }
@@ -75,7 +75,7 @@ Then set the credential. Edit
 "anthropic:manual": {
   "type": "token",
   "provider": "anthropic",
-  "token": "nbmg_<your_token>"
+  "token": "sp_<your_token>"
 }
 ```
 
@@ -102,9 +102,9 @@ Use the Ampere-style provider entry — `apiKey` directly on the provider, not v
 
 ```json
 "openai-codex": {
-  "baseUrl": "https://nextbase-model-gateway.infinitycorp.tech/v1",
+  "baseUrl": "http://localhost:8080/v1",
   "api": "openai-responses",
-  "apiKey": "nbmg_<your_token>",
+  "apiKey": "sp_<your_token>",
   "models": [
     {
       "id": "gpt-5.5",
@@ -127,7 +127,7 @@ Set the auth profile to api_key mode:
 "openai-codex:nextbase-gateway": {
   "type": "api_key",
   "provider": "openai-codex",
-  "key": "nbmg_<your_token>"
+  "key": "sp_<your_token>"
 }
 ```
 
@@ -149,8 +149,8 @@ provider at Nextbase in **both** files:
 
 ```json
 "openai": {
-  "baseUrl": "https://nextbase-model-gateway.infinitycorp.tech/v1",
-  "apiKey": "nbmg_<your_token>",
+  "baseUrl": "http://localhost:8080/v1",
+  "apiKey": "sp_<your_token>",
   "models": []
 }
 ```
@@ -161,7 +161,7 @@ Optional auth profile if your runtime uses provider auth-state rotation:
 "openai:nextbase-gateway": {
   "type": "api_key",
   "provider": "openai",
-  "key": "nbmg_<your_token>"
+  "key": "sp_<your_token>"
 }
 ```
 
@@ -192,8 +192,8 @@ Kimi exposes both OpenAI-compatible and Anthropic-compatible routes under the sa
 
 ```json
 "kimi": {
-  "baseUrl": "https://nextbase-model-gateway.infinitycorp.tech/v1/kimi",
-  "apiKey": "nbmg_<your_token>",
+  "baseUrl": "http://localhost:8080/v1/kimi",
+  "apiKey": "sp_<your_token>",
   "models": [
     { "id": "k3", "name": "Kimi K3" },
     { "id": "kimi-k2.6", "name": "Kimi K2.6" },
@@ -201,7 +201,7 @@ Kimi exposes both OpenAI-compatible and Anthropic-compatible routes under the sa
   ]
 },
 "kimi-anthropic": {
-  "baseUrl": "https://nextbase-model-gateway.infinitycorp.tech/v1/kimi",
+  "baseUrl": "http://localhost:8080/v1/kimi",
   "authHeader": true,
   "models": []
 }
@@ -217,8 +217,8 @@ Cerebras uses an OpenAI-compatible provider pointed at the gateway's Cerebras pr
 
 ```json
 "cerebras": {
-  "baseUrl": "https://nextbase-model-gateway.infinitycorp.tech/v1/cerebras",
-  "apiKey": "nbmg_<your_token>",
+  "baseUrl": "http://localhost:8080/v1/cerebras",
+  "apiKey": "sp_<your_token>",
   "models": [
     { "id": "gpt-oss-120b", "name": "Cerebras GPT OSS 120B" },
           { "id": "zai-glm-4.7", "name": "Cerebras Z.ai GLM 4.7" }
@@ -232,7 +232,7 @@ Optional auth profile if your runtime uses provider auth-state rotation:
 "cerebras:nextbase-gateway": {
   "type": "api_key",
   "provider": "cerebras",
-  "key": "nbmg_<your_token>"
+  "key": "sp_<your_token>"
 }
 ```
 
@@ -251,58 +251,58 @@ First verify the token itself. This does not call an upstream model and does not
 
 ```bash
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/token/check
+  -H "Authorization: Bearer sp_..." \
+  http://localhost:8080/v1/token/check
 ```
 
-Expected: HTTP 200 with `{ "ok": true }`. If you get `401 Invalid or disabled API token`, the token pasted into OpenClaw is wrong, truncated, disabled, or only the `nbmg_...` prefix.
+Expected: HTTP 200 with `{ "ok": true }`. If you get `401 Invalid or disabled API token`, the token pasted into OpenClaw is wrong, truncated, disabled, or only the `sp_...` prefix.
 
 ```bash
 # Should hit nextbase + return 200
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{"model":"claude-sonnet-4-5-20250929","max_tokens":16,"messages":[{"role":"user","content":"pong"}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/messages | head -20
+  http://localhost:8080/v1/messages | head -20
 
 # Codex
 curl -sS -N \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{"model":"gpt-5.5","stream":true,"input":[{"role":"user","content":[{"type":"input_text","text":"pong"}]}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/responses
+  http://localhost:8080/v1/responses
 
 
 # Kimi OpenAI-compatible
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{"model":"kimi-k2.6","messages":[{"role":"user","content":"pong"}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/kimi/chat/completions | head -20
+  http://localhost:8080/v1/kimi/chat/completions | head -20
 
 # Kimi Anthropic-compatible
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -H "anthropic-version: 2023-06-01" \
   -d '{"model":"kimi-k2.6","max_tokens":16,"messages":[{"role":"user","content":"pong"}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/kimi/messages | head -20
+  http://localhost:8080/v1/kimi/messages | head -20
 
 # Cerebras OpenAI-compatible
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{"model":"gpt-oss-120b","messages":[{"role":"user","content":"pong"}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/cerebras/chat/completions | head -20
+  http://localhost:8080/v1/cerebras/chat/completions | head -20
 
 # Image generation (OpenAI Images API shape; served by OpenAI API key if
 # configured, otherwise by Codex OAuth + image_generation tool adapter)
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{"model":"gpt-image-2","prompt":"a small duck swimming in water","size":"1024x1024","n":1}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/images/generations | head -20
+  http://localhost:8080/v1/images/generations | head -20
 ```
 
 Responses include gateway headers such as `x-gateway-account` (and
@@ -327,7 +327,7 @@ Ampere provisioning lives in
 To make Ampere route an instance through Nextbase instead of its own api-proxy
 for a given provider, change the relevant block in `model.ts` so the provider's
 `baseUrl` points at Nextbase and the `apiKey` is the user's Nextbase
-`nbmg_*` token. Anthropic also needs `authHeader: true` (Bearer). Codex must
+`sp_*` token. Anthropic also needs `authHeader: true` (Bearer). Codex must
 remain the `openai-codex` provider with `api: "openai-responses"`; do not set
 `agentRuntime.id: "codex"` for Nextbase-routed traffic because the native Codex
 runtime bypasses OpenAI-compatible provider URLs.
@@ -377,7 +377,7 @@ prompt cache reuse), pass a stable `x-conversation-id` header.
   `fix(codex): record token usage` commit. Pull main and redeploy.
 - **Image generation 404s or bypasses Nextbase.** The local OpenClaw `openai`
   provider is missing or still points directly at `api.openai.com`. Add
-  `models.providers.openai.baseUrl = "https://nextbase-model-gateway.infinitycorp.tech/v1"`
+  `models.providers.openai.baseUrl = "http://localhost:8080/v1"`
   in both `~/.openclaw/openclaw.json` and
   `~/.openclaw/agents/main/agent/models.json`.
 - **`model: "gpt-image-2"` fails on `/v1/responses`.** For ChatGPT OAuth,
@@ -404,8 +404,8 @@ Groq uses an OpenAI-compatible provider pointed at the gateway's Groq prefix:
 
 ```json
 "groq": {
-  "baseUrl": "https://nextbase-model-gateway.infinitycorp.tech/v1/groq",
-  "apiKey": "nbmg_<your_token>",
+  "baseUrl": "http://localhost:8080/v1/groq",
+  "apiKey": "sp_<your_token>",
   "models": [
     { "id": "openai/gpt-oss-120b", "name": "Groq GPT OSS 120B" }
   ]
@@ -416,10 +416,10 @@ Verification:
 
 ```bash
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{"model":"openai/gpt-oss-120b","messages":[{"role":"user","content":"pong"}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/groq/chat/completions
+  http://localhost:8080/v1/groq/chat/completions
 ```
 
 Unknown Groq model names fall back to `openai/gpt-oss-120b` and include `x-gateway-groq-fallback` in the response headers.
@@ -462,39 +462,39 @@ model compares their responses and writes a better final answer.
 ```bash
 # Quality preset (Claude Sonnet + GPT-5.5 + Gemini Flash → Sonnet synthesizer)
 curl -sS -N \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{
     "model": "fusion/quality",
     "stream": true,
     "messages": [{"role": "user", "content": "Compare microservices vs monolith for a 5-person startup."}]
   }' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/fusion/chat/completions
+  http://localhost:8080/v1/fusion/chat/completions
 
 # Budget preset (Gemini Flash + Groq Llama 70B + Cerebras GPT-OSS → Gemini synthesizer)
 curl -sS \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{
     "model": "fusion/budget",
     "messages": [{"role": "user", "content": "What are the tradeoffs of Rust vs Go for CLI tools?"}]
   }' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/fusion/chat/completions
+  http://localhost:8080/v1/fusion/chat/completions
 
 # Compare mode — see all panel responses side-by-side, no synthesis
 curl -sS \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{
     "model": "fusion/quality",
     "messages": [{"role": "user", "content": "Explain quantum computing."}],
     "fusion": {"mode": "compare"}
   }' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/fusion/chat/completions
+  http://localhost:8080/v1/fusion/chat/completions
 
 # Custom inline (no saved preset needed)
 curl -sS \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{
     "model": "fusion/custom",
@@ -504,7 +504,7 @@ curl -sS \
       "synthesizer": "anthropic/claude-sonnet-4-5-20250929"
     }
   }' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/fusion/chat/completions
+  http://localhost:8080/v1/fusion/chat/completions
 ```
 
 ### Available presets
@@ -530,14 +530,14 @@ curl -sS \
     "panel": ["anthropic/claude-sonnet-4-5-20250929", "xai/grok-4-fast", "kimi/kimi-k2.6"],
     "synthesizer": "anthropic/claude-sonnet-4-5-20250929"
   }' \
-  https://nextbase-model-gateway.infinitycorp.tech/api/me/fusion-presets
+  http://localhost:8080/api/me/fusion-presets
 
 # Use it
 curl -sS \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{"model": "fusion/my-research", "messages": [{"role": "user", "content": "..."}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/fusion/chat/completions
+  http://localhost:8080/v1/fusion/chat/completions
 ```
 
 ### Model discovery
@@ -546,8 +546,8 @@ Fusion models appear in the `/v1/models` endpoint (OpenAI-compatible). Clients
 like Cursor will see fusion presets in their model dropdown:
 
 ```bash
-curl -sS -H "Authorization: Bearer nbmg_..." \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/models
+curl -sS -H "Authorization: Bearer sp_..." \
+  http://localhost:8080/v1/models
 ```
 
 ### Modes

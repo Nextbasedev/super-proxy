@@ -123,7 +123,7 @@ const CHAT = {
 };
 
 /**
- * Canonical static NBMG model registry.
+ * Canonical static Super Proxy model registry.
  *
  * Model existence, direct provider-runtime support, and Fusion routability are
  * deliberately distinct. This registry establishes existence and direct
@@ -162,7 +162,7 @@ export const MODEL_CATALOG: readonly ModelCatalogEntry[] = [
     input_modalities: ['text', 'audio'],
     output_modalities: ['text', 'audio'],
     capabilities: ['realtime'],
-    // NBMG returns a short-lived credential synchronously; the client then
+    // Super Proxy returns a short-lived credential synchronously; the client then
     // opens its own upstream realtime connection.
     interfaces: [iface('realtime', '/v1/realtime/client_secrets', 'openai-realtime', NON_STREAMING)],
   }),

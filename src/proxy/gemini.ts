@@ -80,7 +80,7 @@ const GEMINI_MAX_TTS_CHARS = 15_000;
 // Query param we append to a returned File API file_uri to remember which pool
 // account uploaded it. Files are private to the uploading project, so the
 // follow-up generateContent MUST run on the same key. Stripped before forwarding.
-const GEMINI_ACCT_HINT_PARAM = 'nbmg_acct';
+const GEMINI_ACCT_HINT_PARAM = 'sp_acct';
 
 function openAiError(message: string, type = 'server_error', code?: string) {
   return { error: { message, type, code: code || null } };
@@ -210,7 +210,7 @@ function parseFileUriHint(uri: string): { cleanUri: string; accountId: number | 
   if (typeof uri !== 'string' || !uri) return { cleanUri: uri, accountId: null };
   const idx = uri.indexOf(`${GEMINI_ACCT_HINT_PARAM}=`);
   if (idx === -1) return { cleanUri: uri, accountId: null };
-  // strip the &nbmg_acct=N (or ?nbmg_acct=N) fragment
+  // strip the &sp_acct=N (or ?sp_acct=N) fragment
   const before = uri.slice(0, idx).replace(/[?&]$/, '');
   const after = uri.slice(idx).replace(new RegExp(`^${GEMINI_ACCT_HINT_PARAM}=\\d+&?`), '');
   let cleanUri = after ? `${before}${before.includes('?') ? '&' : '?'}${after}` : before;
@@ -802,7 +802,7 @@ async function forwardGeminiFileUpload(req: any, reply: any) {
 }
 
 // GET /v1/gemini/files/:id  — check processing state (ACTIVE/PROCESSING/FAILED).
-// The :id may carry the nbmg_acct hint so we query under the owning key.
+// The :id may carry the sp_acct hint so we query under the owning key.
 async function forwardGeminiFileGet(req: any, reply: any) {
   const auth = await requireProxyToken(req, reply);
   if (!auth) return;

@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import Fastify from 'fastify';
 
-process.env.DATABASE_PATH = path.join(os.tmpdir(), `nbmg-grants-${process.pid}.sqlite`);
+process.env.DATABASE_PATH = path.join(os.tmpdir(), `super-proxy-grants-${process.pid}.sqlite`);
 process.env.DEV_ADMIN_KEY = 'test-admin-key';
 process.env.GROQ_UPSTREAM_URL = 'https://groq.test/openai/v1';
 process.env.ANTHROPIC_UPSTREAM_URL = 'https://anthropic.test';
@@ -31,7 +31,7 @@ function reset() {
   db.exec('DELETE FROM user_limits');
   db.exec('DELETE FROM role_limits');
   db.exec('DELETE FROM api_tokens');
-  db.exec("DELETE FROM users WHERE email != 'daxitm2112@gmail.com'");
+  db.exec('DELETE FROM users');
   db.exec('DELETE FROM provider_accounts');
 }
 
@@ -39,7 +39,7 @@ function seedUser(email = 'cap@example.com', role: 'admin' | 'founder' | 'develo
   return Number(getDb().prepare('INSERT INTO users (email,role,is_admin,enabled) VALUES (?,?,0,1)').run(email, role).lastInsertRowid);
 }
 
-function seedToken(userId: number, raw = 'nbmg_grant_test_token', label = 'g', capUsdDaily: number | null = null) {
+function seedToken(userId: number, raw = 'sp_grant_test_token', label = 'g', capUsdDaily: number | null = null) {
   const tokenId = Number(
     getDb()
       .prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled,cap_usd_daily) VALUES (?,?,?,?,1,?)')
@@ -214,7 +214,7 @@ test('policy: exact model_pattern grant allows that model only', () => {
 test('policy: token-level cap still wins over a generous grant (explicit guardrail)', () => {
   reset();
   const userId = seedUser('token-cap@example.com', 'developer');
-  const { tokenId } = seedToken(userId, 'nbmg_tcap_overrides_grant', 'tcap', /*capUsdDaily*/ 0.0001);
+  const { tokenId } = seedToken(userId, 'sp_tcap_overrides_grant', 'tcap', /*capUsdDaily*/ 0.0001);
   // Spend already over the token cap.
   getDb().prepare(`INSERT INTO usage_events (user_id,token_id,provider,endpoint,model,estimated_cost_usd) VALUES (?,?,?,?,?,?)`)
     .run(userId, tokenId, 'kimi', '/v1/kimi/chat/completions', 'kimi-k2.6', 5.0);

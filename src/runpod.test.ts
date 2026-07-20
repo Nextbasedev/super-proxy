@@ -5,7 +5,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import Fastify from 'fastify';
 
-const dbPath = path.join(os.tmpdir(), `model-gateway-runpod-${process.pid}-${Date.now()}.sqlite`);
+const dbPath = path.join(os.tmpdir(), `super-proxy-runpod-${process.pid}-${Date.now()}.sqlite`);
 process.env.DATABASE_PATH = dbPath;
 process.env.DEV_ADMIN_KEY = 'test-admin';
 process.env.RUNPOD_UPSTREAM_BASE_URL = 'https://runpod.test/v2';

@@ -22,7 +22,7 @@ function resetTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = 'nbmg_fish_token') {
+function seedUserAndToken(raw = 'sp_fish_token') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled) VALUES (?, 'developer', 0, 1)").run(`fish-${Math.random().toString(36).slice(2)}@example.com`).lastInsertRowid);
   db.prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(userId, 'fish', 'allow_all');
@@ -75,7 +75,7 @@ test('Fish TTS forwards s2.1-pro-free with Calm Male Narrator default', async ()
 
 test('Fish TTS enforces account max_in_flight before upstream', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_fish_concurrency_token');
+  const token = seedUserAndToken('sp_fish_concurrency_token');
   getDb().prepare("INSERT INTO provider_accounts (provider,label,secret,status,enabled,max_in_flight) VALUES ('fish','fish-free','fish-key','active',1,1)").run();
   let fetchCalls = 0;
   let releaseFirst!: () => void;

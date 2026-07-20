@@ -2,7 +2,7 @@
 
 ## Summary
 
-Fusion is a multi-model deliberation feature for the Nextbase Model Gateway. A user sends one request, the gateway fans it out to a panel of models in parallel, collects their answers, then a synthesizer model compares and writes a better final answer. Available to all Nextbase team members via any OpenAI-compatible client.
+Fusion is a multi-model deliberation feature for the Super Proxy. A user sends one request, the gateway fans it out to a panel of models in parallel, collects their answers, then a synthesizer model compares and writes a better final answer. Available to all Nextbase team members via any OpenAI-compatible client.
 
 - **Stack:** TypeScript, Fastify, SQLite — same as the existing gateway
 - **Audience:** Nextbase team (internal), all roles

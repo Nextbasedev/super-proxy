@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import Database from 'better-sqlite3';
 import Fastify from 'fastify';
 
-const dbPath = path.join(os.tmpdir(), `model-gateway-glm-${process.pid}-${Date.now()}.sqlite`);
+const dbPath = path.join(os.tmpdir(), `super-proxy-glm-${process.pid}-${Date.now()}.sqlite`);
 process.env.DATABASE_PATH = dbPath;
 process.env.DEV_ADMIN_KEY = 'test-admin';
 process.env.GLM_UPSTREAM_URL = 'https://glm.test/api/anthropic';

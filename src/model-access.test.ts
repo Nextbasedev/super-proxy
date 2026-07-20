@@ -34,7 +34,7 @@ function resetRuntimeTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = 'nbmg_model_access_token') {
+function seedUserAndToken(raw = 'sp_model_access_token') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled) VALUES ('dev@example.com','developer',0,1)").run().lastInsertRowid);
   const tokenId = Number(db.prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled) VALUES (?,?,?,?,1)').run(userId, 'dev-token', sha256(raw), raw.slice(0, 14)).lastInsertRowid);
@@ -206,7 +206,7 @@ test('Fusion defaults to disabled for non-admin users and can be enabled as a pr
 
 test('Fusion route honors provider access mode before panel execution', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_fusion_denied');
+  const token = seedUserAndToken('sp_fusion_denied');
   const app = Fastify();
   registerFusionProxy(app);
   const res = await app.inject({ method: 'POST', url: '/v1/fusion/chat/completions', headers: { authorization: `Bearer ${token.raw}` }, payload: { model: 'fusion/quality', messages: [{ role: 'user', content: 'hi' }] } });
@@ -216,7 +216,7 @@ test('Fusion route honors provider access mode before panel execution', async ()
 
 test('Fusion route preflights synthesizer access for multi-panel synthesis', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_fusion_synth_denied');
+  const token = seedUserAndToken('sp_fusion_synth_denied');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'fusion', 'allow_all');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'groq', 'allow_all');
   const app = Fastify();
@@ -241,7 +241,7 @@ test('Fusion route preflights synthesizer access for multi-panel synthesis', asy
 
 test('Fusion preflight requires authorization for both Cerebras alias and effective runtime model', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_fusion_cerebras_runtime_denied');
+  const token = seedUserAndToken('sp_fusion_cerebras_runtime_denied');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'fusion', 'allow_all');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'cerebras', 'allow_all');
   getDb().prepare('INSERT INTO user_model_denies (user_id,provider,model) VALUES (?,?,?)').run(token.userId, 'cerebras', 'gpt-oss-120b');
@@ -267,7 +267,7 @@ test('Fusion preflight requires authorization for both Cerebras alias and effect
 
 test('Fusion route rejects a fabricated provider/model before dispatch', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_fusion_fake_model');
+  const token = seedUserAndToken('sp_fusion_fake_model');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'fusion', 'allow_all');
   const app = Fastify();
   registerFusionProxy(app);

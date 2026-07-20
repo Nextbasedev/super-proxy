@@ -32,7 +32,7 @@
     "tsx": "4.21.0",
     "typescript": "6.0.3"
   },
-  "description": "Open-source multi-provider AI model gateway with OpenAI and Anthropic-compatible APIs",
+  "description": "Super Proxy \u2014 open-source multi-provider AI gateway with OpenAI & Anthropic-compatible APIs, usage controls, and a self-host dashboard",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=20"
@@ -40,5 +40,15 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/example/super-proxy.git"
-  }
+  },
+  "keywords": [
+    "ai",
+    "llm",
+    "gateway",
+    "proxy",
+    "openai",
+    "anthropic",
+    "streaming",
+    "self-hosted"
+  ]
 }

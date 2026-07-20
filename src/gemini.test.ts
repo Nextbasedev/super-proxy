@@ -6,7 +6,7 @@ import Database from 'better-sqlite3';
 import Fastify from 'fastify';
 
 
-const dbPath = path.join(os.tmpdir(), `model-gateway-gemini-${process.pid}-${Date.now()}.sqlite`);
+const dbPath = path.join(os.tmpdir(), `super-proxy-gemini-${process.pid}-${Date.now()}.sqlite`);
 process.env.DATABASE_PATH = dbPath;
 process.env.DEV_ADMIN_KEY = 'test-admin';
 process.env.GEMINI_UPSTREAM_URL = 'https://gemini.test/v1beta';
@@ -556,7 +556,7 @@ test('Gemini File API: upload returns a tagged file_uri and pins chat to the upl
   const up = await app.inject({ method: 'POST', url: '/v1/gemini/files', headers: { authorization: `Bearer ${tok.raw}`, 'content-type': 'video/mp4' }, payload: Buffer.from('hello') });
   assert.equal(up.statusCode, 200, up.body);
   const taggedUri = up.json().file_uri as string;
-  assert.match(taggedUri, /nbmg_acct=\d+/, 'returned file_uri must carry the account hint');
+  assert.match(taggedUri, /sp_acct=\d+/, 'returned file_uri must carry the account hint');
   // chat referencing the tagged uri
   const ch = await app.inject({ method: 'POST', url: '/v1/gemini/chat/completions', headers: { authorization: `Bearer ${tok.raw}` }, payload: {
     model: 'gemini-3.5-flash',
@@ -579,7 +579,7 @@ test('Gemini File API: referencing a file whose key is gone returns a clear 400'
   // tagged uri points at account id 999999 which does not exist
   const res = await app.inject({ method: 'POST', url: '/v1/gemini/chat/completions', headers: { authorization: `Bearer ${tok.raw}` }, payload: {
     model: 'gemini-3.5-flash',
-    messages: [{ role: 'user', content: [{ type: 'video_url', video_url: { url: 'https://generativelanguage.googleapis.com/v1beta/files/x?nbmg_acct=999999' } }] }],
+    messages: [{ role: 'user', content: [{ type: 'video_url', video_url: { url: 'https://generativelanguage.googleapis.com/v1beta/files/x?sp_acct=999999' } }] }],
   } });
   assert.equal(res.statusCode, 400, res.body);
   assert.match(res.json().error.message, /no longer available|re-upload/i);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import os from 'node:os';
 import path from 'node:path';
 
-process.env.DATABASE_PATH = path.join(os.tmpdir(), `model-gateway-codexbucket-${process.pid}-${Date.now()}.sqlite`);
+process.env.DATABASE_PATH = path.join(os.tmpdir(), `super-proxy-codexbucket-${process.pid}-${Date.now()}.sqlite`);
 process.env.DEV_ADMIN_KEY = 'test-admin';
 
 const { migrate } = await import('./db/migrate.js');

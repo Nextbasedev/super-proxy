@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 // Fresh DB for this suite.
-const dbPath = path.join(os.tmpdir(), `model-gateway-monitoring-${process.pid}-${Date.now()}.sqlite`);
+const dbPath = path.join(os.tmpdir(), `super-proxy-monitoring-${process.pid}-${Date.now()}.sqlite`);
 process.env.DATABASE_PATH = dbPath;
 process.env.DEV_ADMIN_KEY = 'test-admin';
 

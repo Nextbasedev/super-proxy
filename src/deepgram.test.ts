@@ -29,7 +29,7 @@ function resetRuntimeTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = 'nbmg_deepgram_token') {
+function seedUserAndToken(raw = 'sp_deepgram_token') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled) VALUES ('dev@example.com','developer',0,1)").run().lastInsertRowid);
   const tokenId = Number(db.prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled) VALUES (?,?,?,?,1)').run(userId, 'dev-token', sha256(raw), raw.slice(0, 14)).lastInsertRowid);
@@ -72,7 +72,7 @@ test('Deepgram route rejects unknown models before upstream', async () => {
 
 test('Deepgram route forwards allowed URL transcription and records duration seconds', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_deepgram_allowed');
+  const token = seedUserAndToken('sp_deepgram_allowed');
   seedDeepgram('allowed');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'deepgram', 'allow_all');
   let seenUrl = '';
@@ -100,7 +100,7 @@ test('Deepgram route forwards allowed URL transcription and records duration sec
 
 test('Deepgram deny_all blocks allowed models', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_deepgram_denied');
+  const token = seedUserAndToken('sp_deepgram_denied');
   seedDeepgram('denied');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'deepgram', 'deny_all');
   const app = Fastify();

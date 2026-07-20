@@ -6,7 +6,7 @@ export function sha256(input: string): string {
 }
 
 export function createProxyToken(): { raw: string; hash: string; prefix: string } {
-  const raw = `nbmg_${nanoid(48)}`;
+  const raw = `sp_${nanoid(48)}`;
   return { raw, hash: sha256(raw), prefix: raw.slice(0, 14) };
 }
 

@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import Database from 'better-sqlite3';
 import Fastify from 'fastify';
 
-const dbPath = path.join(os.tmpdir(), `model-gateway-kimi-${process.pid}-${Date.now()}.sqlite`);
+const dbPath = path.join(os.tmpdir(), `super-proxy-kimi-${process.pid}-${Date.now()}.sqlite`);
 process.env.DATABASE_PATH = dbPath;
 process.env.DEV_ADMIN_KEY = 'test-admin';
 process.env.KIMI_UPSTREAM_URL = 'https://kimi.test/coding/v1';

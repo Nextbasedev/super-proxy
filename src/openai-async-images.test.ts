@@ -25,7 +25,7 @@ function resetTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = `nbmg_async_test_${Math.random().toString(36).slice(2)}`) {
+function seedUserAndToken(raw = `sp_async_test_${Math.random().toString(36).slice(2)}`) {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled,full_body_logging) VALUES (?, 'developer', 0, 1, 0)").run(`dev-${Math.random().toString(36).slice(2)}@example.com`).lastInsertRowid);
   db.prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(userId, 'openai_codex', 'allow_all');
@@ -77,7 +77,7 @@ test('image_jobs migration is registered as the latest schema version', () => {
 
 test('async generations: queue -> running -> completed with OpenAI Images shape', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_gen_ok');
+  const token = seedUserAndToken('sp_async_gen_ok');
   seedCodexFresh('codex-async-gen');
   let seenUrl = '';
   let seenBody: any;
@@ -117,7 +117,7 @@ test('async generations: queue -> running -> completed with OpenAI Images shape'
 
 test('async edits: base64 image is persisted and reconstructed into Responses input', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_edit_ok');
+  const token = seedUserAndToken('sp_async_edit_ok');
   seedCodexFresh('codex-async-edit');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -148,7 +148,7 @@ test('async edits: base64 image is persisted and reconstructed into Responses in
 
 test('async multipart edits persist parsed base64 image into the job', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_edit_multipart');
+  const token = seedUserAndToken('sp_async_edit_multipart');
   seedCodexFresh('codex-async-mp');
   const boundary = 'nbmgAsyncBoundary';
   const body = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\ngpt-image-2\r\n--${boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\nmake it pop\r\n--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="source.png"\r\nContent-Type: image/png\r\n\r\nPNGDATA\r\n--${boundary}--\r\n`, 'utf8');
@@ -172,7 +172,7 @@ test('async multipart edits persist parsed base64 image into the job', async () 
 
 test('async multipart edits reject missing image before enqueue', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_edit_no_image');
+  const token = seedUserAndToken('sp_async_edit_no_image');
   seedCodexFresh('codex-async-noimg');
   const boundary = 'nbmgAsyncNoImg';
   const body = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\ngpt-image-2\r\n--${boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\nhi\r\n--${boundary}--\r\n`, 'utf8');
@@ -194,7 +194,7 @@ test('async multipart edits reject missing image before enqueue', async () => {
 
 test('async failure: upstream error is stored as failed with status_code + error object', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_fail');
+  const token = seedUserAndToken('sp_async_fail');
   seedCodexFresh('codex-async-fail');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(JSON.stringify({ error: { message: 'nope' } }), { status: 400, headers: { 'content-type': 'application/json' } });
@@ -215,8 +215,8 @@ test('async failure: upstream error is stored as failed with status_code + error
 
 test('ownership scoping: another user cannot read someone else\'s job (404)', async () => {
   resetTables();
-  const owner = seedUserAndToken('nbmg_async_owner');
-  const other = seedUserAndToken('nbmg_async_other');
+  const owner = seedUserAndToken('sp_async_owner');
+  const other = seedUserAndToken('sp_async_other');
   seedCodexFresh('codex-async-scope');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(IMAGE_SSE, { status: 200, headers: { 'content-type': 'text/event-stream' } });
@@ -242,7 +242,7 @@ test('ownership scoping: another user cannot read someone else\'s job (404)', as
 
 test('stuck running job older than 10m is lazily marked failed on read', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_stuck');
+  const token = seedUserAndToken('sp_async_stuck');
   const now = Date.now();
   const jobId = 'stuck-job-1';
   getDb().prepare(`INSERT INTO image_jobs (id,user_id,token_id,endpoint,status,request_json,created_at,updated_at,expires_at) VALUES (?,?,?,?,?,?,?,?,?)`)
@@ -262,7 +262,7 @@ test('stuck running job older than 10m is lazily marked failed on read', async (
 
 test('expired job rows are purged lazily on read', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_expired');
+  const token = seedUserAndToken('sp_async_expired');
   const now = Date.now();
   getDb().prepare(`INSERT INTO image_jobs (id,user_id,token_id,endpoint,status,request_json,created_at,updated_at,expires_at) VALUES (?,?,?,?,?,?,?,?,?)`)
     .run('expired-1', token.userId, token.tokenId, '/images/generations', 'completed', JSON.stringify({}), now - 2 * 60 * 60_000, now - 90 * 60_000, now - 60_000);
@@ -278,7 +278,7 @@ test('expired job rows are purged lazily on read', async () => {
 
 test('async model-not-allowed is rejected up front (no job row)', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_denied');
+  const token = seedUserAndToken('sp_async_denied');
   // Deny openai_codex for this user by removing the allow_all mode.
   getDb().prepare('DELETE FROM user_provider_access_modes WHERE user_id=?').run(token.userId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'openai_codex', 'deny_all');
@@ -300,7 +300,7 @@ test('async model-not-allowed is rejected up front (no job row)', async () => {
 
 test('async over-limit is rejected up front (429, no job row)', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_async_overlimit');
+  const token = seedUserAndToken('sp_async_overlimit');
   getDb().prepare('UPDATE api_tokens SET cap_tokens_daily=1 WHERE id=?').run(token.tokenId);
   getDb().prepare("INSERT INTO usage_events (user_id,token_id,provider,endpoint,model,status_code,input_tokens,output_tokens) VALUES (?,?,?,?,?,?,?,?)")
     .run(token.userId, token.tokenId, 'openai_codex', '/v1/images/generations', 'gpt-image-2', 200, 1, 0);
@@ -322,7 +322,7 @@ test('async over-limit is rejected up front (429, no job row)', async () => {
 
 test('sync Codex image path still returns identical OpenAI Images shape after refactor', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_sync_unchanged');
+  const token = seedUserAndToken('sp_sync_unchanged');
   seedCodexFresh('codex-sync-unchanged');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(IMAGE_SSE, { status: 200, headers: { 'content-type': 'text/event-stream' } });

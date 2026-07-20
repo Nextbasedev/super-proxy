@@ -1,8 +1,8 @@
-# NBMG Monitoring System — Feature Checklist
+# Super Proxy Monitoring System — Feature Checklist
 
 ## Summary
 
-Internal observability system for the Nextbase Model Gateway: tracks cache efficiency,
+Internal observability system for the Super Proxy: tracks cache efficiency,
 token usage, cost (notional vs metered), and provider-pool reliability across all 14
 providers. Consumed by Yash + Daxit via a read-only monitoring role in the existing admin
 console, with tiered Discord alerting. Built on SQLite rollups — no new infrastructure.

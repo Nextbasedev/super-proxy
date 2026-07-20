@@ -1,4 +1,4 @@
-# NBMG General Model Catalog — Implementation Spec
+# Super Proxy General Model Catalog — Implementation Spec
 
 ## Goal
 

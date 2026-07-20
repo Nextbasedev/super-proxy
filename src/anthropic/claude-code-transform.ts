@@ -254,7 +254,7 @@ function isEmptySignedThinkingBlock(block: any): boolean {
 
 // OpenClaw compaction/history export can preserve Anthropic thinking signatures
 // while blanking the signed payload (`thinking:""`). Those blocks are already
-// invalid before they reach NBMG; masking preserves them byte-for-byte, which
+// invalid before they reach Super Proxy; masking preserves them byte-for-byte, which
 // still fails upstream. Drop only these provably-corrupted blocks before the
 // fingerprint transform. Valid non-empty signed thinking blocks remain protected
 // by maskThinkingBlocks/unmaskThinkingBlocks.

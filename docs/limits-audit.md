@@ -1,7 +1,7 @@
-# Nextbase Model Gateway — limit-enforcement audit
+# Super Proxy — limit-enforcement audit
 
-**Repo:** `projects/model-gateway` @ branch `feat/time-bounded-grants` (base `main` `697a073`)
-**Prod DB snapshot:** `/root/.openclaw/workspace/archive/prod-db/_*.csv` (copied from `65.21.109.171:/opt/services/model-gateway/data/model-gateway.sqlite`, read-only).
+**Repo:** `projects/super-proxy` @ branch `feat/time-bounded-grants` (base `main` `697a073`)
+**Prod DB snapshot:** `/root/.openclaw/workspace/archive/prod-db/_*.csv` (copied from `127.0.0.1:/opt/services/super-proxy/data/super-proxy.sqlite`, read-only).
 **Date:** 2026-05-15
 
 ---
@@ -123,19 +123,19 @@ users               : 9
 
 | # | User | Role | Token | Effective cap | 24h spend | Status |
 |---|------|------|-------|---------------|-----------|--------|
-| 1 | `daxitm2112@gmail.com` | admin | `Daxit Openclaw` (`nbmg_GYFLrhye3`, id 8) | none (no token/user/role cap, also admin bypass) | **$1,270.12 anthropic + $174.02 codex + $0 groq/cerebras** | Unconstrained by design (admin) but also unconstrained by token-level cap. |
-| 2 | `dixit@infinitycorp.tech` | developer | `personal` (`nbmg_JyzZvUuyn`, id 13) | none | **$699.24 codex (gpt-5.5, 1,857 reqs) + $3.56 anthropic + $0.12 codex mini + Kimi 10.85M tokens** | Developer with no cap. If a `role_limits` row had said `daily_usd=100` they would have been blocked at request ~120 of the day. |
-| 3 | `khenidarshitz@gmail.com` | admin | `dk` (`nbmg_rVXv9R4MZ`, id 18) | none | **$298.07 anthropic (claude-opus-4-6) + $5.38 codex** | Admin, so even if caps existed they'd bypass; only a token cap could rein in this account. |
+| 1 | `admin@localhost` | admin | `Daxit Openclaw` (`sp_GYFLrhye3`, id 8) | none (no token/user/role cap, also admin bypass) | **$1,270.12 anthropic + $174.02 codex + $0 groq/cerebras** | Unconstrained by design (admin) but also unconstrained by token-level cap. |
+| 2 | `user3@example.com` | developer | `personal` (`sp_JyzZvUuyn`, id 13) | none | **$699.24 codex (gpt-5.5, 1,857 reqs) + $3.56 anthropic + $0.12 codex mini + Kimi 10.85M tokens** | Developer with no cap. If a `role_limits` row had said `daily_usd=100` they would have been blocked at request ~120 of the day. |
+| 3 | `khenidarshitz@gmail.com` | admin | `dk` (`sp_rVXv9R4MZ`, id 18) | none | **$298.07 anthropic (claude-opus-4-6) + $5.38 codex** | Admin, so even if caps existed they'd bypass; only a token cap could rein in this account. |
 
 **Proof of broken/missing enforcement:** every user in the table above exceeded any "reasonable" daily budget (e.g., $50/day) without ever tripping `checkLooseLimit`, because the cap fields were `NULL`. SQL `COALESCE(ul.daily_usd, rl.daily_usd)` returned `NULL`, the `if (!limit?.daily_usd && !limit?.daily_tokens) return {ok:true};` short-circuit fired, and the request went through.
 
 ### Same query on prod for completeness
 ```sh
-sqlite3 -readonly /opt/services/model-gateway/data/model-gateway.sqlite \
+sqlite3 -readonly /opt/services/super-proxy/data/super-proxy.sqlite \
   "SELECT u.email, e.provider, ul.daily_usd, ul.daily_tokens, rl.daily_usd, rl.daily_tokens
    FROM users u LEFT JOIN user_limits ul ON ul.user_id=u.id
    LEFT JOIN role_limits rl ON rl.role=u.role
-   WHERE u.email IN ('daxitm2112@gmail.com','dixit@infinitycorp.tech','khenidarshitz@gmail.com');"
+   WHERE u.email IN ('admin@localhost','user3@example.com','khenidarshitz@gmail.com');"
 # → returns no rows from ul or rl (both empty tables).
 ```
 
@@ -224,7 +224,7 @@ Build: `npm run build` clean. Tests: `npm test` → 28/28 (20 pre-existing + 8 n
 
 1. **Review** the branch locally:
    ```bash
-   cd projects/model-gateway
+   cd projects/super-proxy
    git checkout feat/time-bounded-grants
    npm run build && npm test
    git log --oneline main..HEAD
@@ -240,19 +240,19 @@ Build: `npm run build` clean. Tests: `npm test` → 28/28 (20 pre-existing + 8 n
    git push origin main
    ```
    *Do not* push the branch before merging — production auto-deploys.
-4. **Verify migration** ran on the box: SSH to `65.21.109.171`, watch the
+4. **Verify migration** ran on the box: SSH to `127.0.0.1`, watch the
    service logs, then:
    ```bash
-   sqlite3 -readonly /opt/services/model-gateway/data/model-gateway.sqlite \
+   sqlite3 -readonly /opt/services/super-proxy/data/super-proxy.sqlite \
      "SELECT version FROM schema_migrations WHERE version = 2026051502;"
-   sqlite3 -readonly /opt/services/model-gateway/data/model-gateway.sqlite \
+   sqlite3 -readonly /opt/services/super-proxy/data/super-proxy.sqlite \
      ".schema user_grants"
    ```
 5. **Smoke test** the new endpoints with the dev admin key (production sets a
    real `SESSION_SECRET`; from the console you can use a logged-in admin
    cookie):
    ```bash
-   curl https://nextbase-model-gateway.infinitycorp.tech/admin/grants \
+   curl http://localhost:8080/admin/grants \
      -H "x-admin-key: $ADMIN_KEY"
    ```
 6. **First real grant**: create one through the UI (Identity → user → Grants

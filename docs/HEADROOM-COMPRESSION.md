@@ -1,4 +1,4 @@
-# Headroom Context Compression — NBMG Integration
+# Headroom Context Compression — Super Proxy Integration
 
 **Branch:** `feat/headroom-compression`
 **Date:** 2026-07-03
@@ -6,18 +6,18 @@
 
 ## Overview
 
-Gateway-side context compression using [Headroom](https://github.com/headroomlabs-ai/headroom) to reduce LLM input tokens across the entire fleet. One shared compression instance at NBMG level — zero changes to fleet user boxes.
+Gateway-side context compression using [Headroom](https://github.com/headroomlabs-ai/headroom) to reduce LLM input tokens across the entire fleet. One shared compression instance at Super Proxy level — zero changes to fleet user boxes.
 
 ## Why
 
-Fleet users send large tool outputs (JSON arrays, logs, code files) through NBMG to upstream providers. These payloads have high redundancy — repeated JSON keys, repetitive log patterns, structural overhead — that can be compressed without losing information.
+Fleet users send large tool outputs (JSON arrays, logs, code files) through Super Proxy to upstream providers. These payloads have high redundancy — repeated JSON keys, repetitive log patterns, structural overhead — that can be compressed without losing information.
 
 **Cost impact:** Input tokens are a major cost driver across all providers. A 50-74% reduction on tool outputs translates directly to lower per-user costs.
 
 ## Architecture
 
 ```
-Current NBMG flow:
+Current Super Proxy flow:
   request → auth → provider proxy → upstream provider
 
 With compression:
@@ -38,7 +38,7 @@ With compression:
 
 ### Request flow (detailed)
 
-1. Request arrives at NBMG provider route (e.g., `/v1/kimi/chat/completions`)
+1. Request arrives at Super Proxy provider route (e.g., `/v1/kimi/chat/completions`)
 2. Auth middleware validates token
 3. **Compression middleware** (new):
    - Parses request body for `messages[]`
@@ -61,9 +61,9 @@ If Headroom is unreachable or compression fails:
 
 ### Staging setup (2026-07-03)
 
-Tested on openclaw-internal staging server (`178.104.125.0`) with real NBMG upstream.
+Tested on agent-runtime staging server (`178.104.125.0`) with real Super Proxy upstream.
 
-Architecture: OpenClaw container → NBMG shim (:8898) → Headroom proxy (:8899) → NBMG upstream
+Architecture: OpenClaw container → Super Proxy shim (:8898) → Headroom proxy (:8899) → Super Proxy upstream
 
 ### Claude Sonnet 4.6 (Anthropic API)
 
@@ -166,7 +166,7 @@ async function compressMiddleware(req, reply) {
 
 ### Phase 2: Sidecar deployment
 
-Deploy Headroom proxy alongside NBMG on the same server:
+Deploy Headroom proxy alongside Super Proxy on the same server:
 
 ```yaml
 # sidecar/headroom/docker-compose.yml
@@ -184,7 +184,7 @@ services:
 
 ### Phase 3: Metrics + dashboard
 
-Add compression stats to the NBMG admin dashboard:
+Add compression stats to the Super Proxy admin dashboard:
 - Tokens saved per provider, per user
 - Compression ratio distribution
 - Error/bypass rate
@@ -193,8 +193,8 @@ Add compression stats to the NBMG admin dashboard:
 ## What does NOT change
 
 - **Fleet user boxes** — zero changes, zero config updates
-- **openclaw-internal** — no managed.json5 changes needed
-- **Provider routing** — all existing NBMG paths stay the same
+- **agent-runtime** — no managed.json5 changes needed
+- **Provider routing** — all existing Super Proxy paths stay the same
 - **Response format** — responses flow back unchanged
 - **Streaming** — compression happens on request (messages), not response. SSE unaffected.
 
@@ -211,7 +211,7 @@ Add compression stats to the NBMG admin dashboard:
 ## Test artifacts
 
 All test scripts and results from the staging validation are in:
-- `openclaw-internal` branch `research/headroom-evaluation`
+- `agent-runtime` branch `research/headroom-evaluation`
 - `docs/HEADROOM-EVALUATION.md` — original evaluation (July 2)
 - `docs/HEADROOM-STAGING-SETUP.md` — staging architecture doc
 - `scripts/headroom-eval/` — A/B test harness, shim, RAM stress test

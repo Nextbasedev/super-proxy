@@ -345,13 +345,16 @@ export function pruneRetention(now = new Date()): { rawDeleted: number; hourlyDe
     if (n < PRUNE_BATCH) break;
   }
 
-  // Aside task prompt retention follows the same expiry contract as request_logs.
-  const asideStmt = db.prepare(`DELETE FROM aside_usage_log WHERE id IN (SELECT id FROM aside_usage_log WHERE expires_at < ? LIMIT ?)`);
-  let asideDeleted = 0;
-  while (asideDeleted < PRUNE_MAX_PER_PASS) {
-    const n = asideStmt.run(now.toISOString(), PRUNE_BATCH).changes;
-    asideDeleted += n;
-    if (n < PRUNE_BATCH) break;
+  // Historical aside_usage_log (inert OSS tables). Prune only if the table exists.
+  const asideTable = db.prepare("SELECT 1 AS ok FROM sqlite_master WHERE type='table' AND name='aside_usage_log'").get() as { ok: number } | undefined;
+  if (asideTable) {
+    const asideStmt = db.prepare(`DELETE FROM aside_usage_log WHERE id IN (SELECT id FROM aside_usage_log WHERE expires_at < ? LIMIT ?)`);
+    let asideDeleted = 0;
+    while (asideDeleted < PRUNE_MAX_PER_PASS) {
+      const n = asideStmt.run(now.toISOString(), PRUNE_BATCH).changes;
+      asideDeleted += n;
+      if (n < PRUNE_BATCH) break;
+    }
   }
 
   if (!config.monitorRetentionEnabled) return { rawDeleted, hourlyDeleted, requestLogsDeleted };

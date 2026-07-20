@@ -1,80 +1,24 @@
 services:
-  model-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: nextbase/model-gateway:latest
-    container_name: model-gateway
-    restart: unless-stopped
-    # Run as the fixed non-root uid:gid baked into the image (deploy-guard prereq).
-    # The Dockerfile also sets USER 10001:10001; this makes it explicit and is
-    # authoritative even if the image is rebuilt without USER.
-    user: "10001:10001"
-    # --- Security hardening ---
-    security_opt:
-      - "no-new-privileges:true"
-    cap_drop:
-      - "ALL"
-    # read_only rootfs is intentionally NOT enabled: sqlite needs to write under
-    # /app/data (a bind mount, which stays writable regardless). Enabling
-    # read_only would require verifying every write path (incl. /tmp). It can be
-    # added later as:
-    #   read_only: true
-    #   tmpfs:
-    #     - /tmp
-    # after verifying sqlite + any temp writes still work. Defaulting to writable
-    # rootfs here to avoid breakage.
-    pids_limit: 512
-    env_file:
-      # Absolute prod path so deploy-guard's release-dir model works regardless
-      # of the compose CWD. Requires .env to exist at this path on the host.
-      - /opt/services/model-gateway/.env
+  super-proxy:
+    build: .
+    ports:
+      - "${PORT:-8080}:8080"
     environment:
       NODE_ENV: production
-      PORT: 4580
-      DATABASE_PATH: /app/data/model-gateway.sqlite
-    ports:
-      - "127.0.0.1:4580:4580"
+      PORT: 8080
+      DATABASE_PATH: /data/super-proxy.sqlite
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost}
+      GATEWAY_NAME: ${GATEWAY_NAME:-Super Proxy}
+      GATEWAY_PUBLIC_URL: ${GATEWAY_PUBLIC_URL:-http://localhost:8080}
     volumes:
-      # Absolute prod path. The host dir MUST be chown'd to 10001:10001 so the
-      # non-root container can write its sqlite DB (see docs/HARDENING.md).
-      - /opt/services/model-gateway/data:/app/data
+      - super-proxy-data:/data
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:4580/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
-      interval: 30s
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 6
       start_period: 20s
-
-  # Headroom context compression sidecar.
-  # Compresses LLM request payloads (tool outputs, conversation history) before
-  # the gateway forwards to upstream providers. 50-74% input token savings.
-  # Activated by HEADROOM_ENABLED=true in the gateway .env.
-  # If this container is down, the gateway passes requests through uncompressed.
-  # Set HEADROOM_URL=http://headroom-proxy:8899 in the gateway .env (Docker DNS).
-  headroom-proxy:
-    build:
-      context: ./sidecar/headroom
-      dockerfile: Dockerfile
-    container_name: headroom-proxy
     restart: unless-stopped
-    environment:
-      - HEADROOM_TELEMETRY=off
-      - HEADROOM_OUTPUT_SHAPER=1
-      - HEADROOM_SKIP_UPSTREAM_CHECK=1
-    expose:
-      - "8899"
-    volumes:
-      - headroom-logs:/var/log/headroom
-      - headroom-data:/root/.headroom
-    mem_limit: 2g
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8899/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
 
 volumes:
-  headroom-logs:
-  headroom-data:
+  super-proxy-data:

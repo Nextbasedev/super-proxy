@@ -28,7 +28,7 @@ function resetRuntimeTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = 'nbmg_test_token') {
+function seedUserAndToken(raw = 'sp_test_token') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled) VALUES ('dev@example.com','developer',0,1)").run().lastInsertRowid);
   db.prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(userId, 'groq', 'allow_all');
@@ -138,7 +138,7 @@ test('unknown Groq model falls back, records zero-cost usage with token counts',
 
 test('omitted Groq model cannot bypass provider deny_all', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_deny_all_token');
+  const token = seedUserAndToken('sp_deny_all_token');
   getDb().prepare("UPDATE user_provider_access_modes SET mode='deny_all' WHERE user_id=? AND provider='groq'").run(token.userId);
   seedGroq('deny-all');
   const oldFetch = globalThis.fetch;
@@ -167,7 +167,7 @@ test('omitted Groq model cannot bypass provider deny_all', async () => {
 
 test('Groq 429 with Retry-After cools down account-model and retries next account', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_retry_token');
+  const token = seedUserAndToken('sp_retry_token');
   const a = seedGroq('first');
   const b = seedGroq('second');
   let calls = 0;
@@ -192,7 +192,7 @@ test('Groq 429 with Retry-After cools down account-model and retries next accoun
 
 test('Groq content_filter is surfaced and force-logged', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_groq_filter');
+  const token = seedUserAndToken('sp_groq_filter');
   seedGroq('filter');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(JSON.stringify({ choices: [{ index: 0, message: { role: 'assistant', content: '' }, finish_reason: 'content_filter' }], usage: { prompt_tokens: 5, completion_tokens: 0 } }), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -208,7 +208,7 @@ test('Groq content_filter is surfaced and force-logged', async () => {
 
 test('Groq length finish_reason appends truncation marker without force-log', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_groq_length');
+  const token = seedUserAndToken('sp_groq_length');
   seedGroq('length');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(JSON.stringify({ choices: [{ index: 0, message: { role: 'assistant', content: 'partial' }, finish_reason: 'length' }], usage: { prompt_tokens: 5, completion_tokens: 3 } }), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -223,7 +223,7 @@ test('Groq length finish_reason appends truncation marker without force-log', as
 
 test('Groq interrupted stream emits visible tail and force-logs', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_groq_interrupt');
+  const token = seedUserAndToken('sp_groq_interrupt');
   seedGroq('interrupt');
   const sse = 'data: {"choices":[{"index":0,"delta":{"content":"partial"},"finish_reason":null}]}\n\n';
   const oldFetch = globalThis.fetch;
@@ -241,7 +241,7 @@ test('Groq interrupted stream emits visible tail and force-logs', async () => {
 
 test('Groq blocked_api_access (400) cools account down and retries pool', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_groq_blocked');
+  const token = seedUserAndToken('sp_groq_blocked');
   const dead = seedGroq('groq-blocked', 'gsk_blocked');
   const live = seedGroq('groq-live', 'gsk_live');
   const oldFetch = globalThis.fetch;

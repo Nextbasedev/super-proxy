@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import Fastify from 'fastify';
 
-process.env.DATABASE_PATH = path.join(os.tmpdir(), `nbmg-health-${process.pid}.sqlite`);
+process.env.DATABASE_PATH = path.join(os.tmpdir(), `super-proxy-health-${process.pid}.sqlite`);
 
 const { getDb } = await import('./db/index.js');
 const { migrate, LATEST_SCHEMA_MIGRATION_VERSION } = await import('./db/migrate.js');
@@ -23,6 +23,7 @@ test('/health returns ok when DB is queryable and latest migration is present', 
   const res = await app.inject({ method: 'GET', url: '/health' });
   assert.equal(res.statusCode, 200, res.body);
   assert.equal(res.json().ok, true);
+  assert.equal(res.json().service, 'super-proxy');
   assert.equal(res.json().migration, LATEST_SCHEMA_MIGRATION_VERSION);
   await app.close();
 });

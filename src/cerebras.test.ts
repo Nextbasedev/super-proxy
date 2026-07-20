@@ -29,7 +29,7 @@ function resetRuntimeTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = 'nbmg_test_token') {
+function seedUserAndToken(raw = 'sp_test_token') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled) VALUES ('dev@example.com','developer',0,1)").run().lastInsertRowid);
   db.prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(userId, 'cerebras', 'allow_all');
@@ -45,7 +45,7 @@ const CEREBRAS_FALLBACK_ALIAS = 'qwen-3-235b-a22b-instruct-2507';
 
 async function exerciseCerebrasAliasAuthorization(deniedModels: string[], expectedAllowed: boolean) {
   resetRuntimeTables();
-  const token = seedUserAndToken(`nbmg_cerebras_alias_${deniedModels.join('_') || 'allowed'}`);
+  const token = seedUserAndToken(`sp_cerebras_alias_${deniedModels.join('_') || 'allowed'}`);
   for (const model of deniedModels) {
     getDb().prepare('INSERT INTO user_model_denies (user_id,provider,model) VALUES (?,?,?)')
       .run(token.userId, 'cerebras', model);
@@ -198,7 +198,7 @@ test('Cerebras fallback alias is listed and callable only when alias and runtime
 
 test('unknown Cerebras fallback still authorizes the resolved default model', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_unknown_fallback_denied');
+  const token = seedUserAndToken('sp_unknown_fallback_denied');
   getDb().prepare('INSERT INTO user_model_denies (user_id,provider,model) VALUES (?,?,?)')
     .run(token.userId, 'cerebras', 'gpt-oss-120b');
   const oldFetch = globalThis.fetch;
@@ -227,7 +227,7 @@ test('unknown Cerebras fallback still authorizes the resolved default model', as
 
 test('omitted Cerebras model cannot bypass provider deny_all', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_deny_all_token');
+  const token = seedUserAndToken('sp_deny_all_token');
   getDb().prepare("UPDATE user_provider_access_modes SET mode='deny_all' WHERE user_id=? AND provider='cerebras'").run(token.userId);
   seedCerebras('deny-all');
   const oldFetch = globalThis.fetch;
@@ -257,7 +257,7 @@ test('omitted Cerebras model cannot bypass provider deny_all', async () => {
 
 test('Cerebras usage event has estimated_cost_usd=0 and token counts present', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_usage_token');
+  const token = seedUserAndToken('sp_usage_token');
   seedCerebras('usage');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(JSON.stringify({ id: 'cmpl', choices: [], usage: { prompt_tokens: 11, completion_tokens: 13, total_tokens: 24 } }), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -275,7 +275,7 @@ test('Cerebras usage event has estimated_cost_usd=0 and token counts present', a
 
 test('Cerebras 429 with Retry-After cools down account-model and retries next account', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_retry_token');
+  const token = seedUserAndToken('sp_retry_token');
   const a = seedCerebras('first');
   const b = seedCerebras('second');
   let calls = 0;
@@ -300,7 +300,7 @@ test('Cerebras 429 with Retry-After cools down account-model and retries next ac
 
 test('Cerebras content_filter is surfaced and force-logged', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_cerebras_filter');
+  const token = seedUserAndToken('sp_cerebras_filter');
   seedCerebras('filter');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(JSON.stringify({ choices: [{ index: 0, message: { role: 'assistant', content: '' }, finish_reason: 'content_filter' }], usage: { prompt_tokens: 5, completion_tokens: 0 } }), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -316,7 +316,7 @@ test('Cerebras content_filter is surfaced and force-logged', async () => {
 
 test('Cerebras length finish_reason appends truncation marker without force-log', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_cerebras_length');
+  const token = seedUserAndToken('sp_cerebras_length');
   seedCerebras('length');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(JSON.stringify({ choices: [{ index: 0, message: { role: 'assistant', content: 'partial' }, finish_reason: 'length' }], usage: { prompt_tokens: 5, completion_tokens: 3 } }), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -331,7 +331,7 @@ test('Cerebras length finish_reason appends truncation marker without force-log'
 
 test('Cerebras interrupted stream emits visible tail and force-logs', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_cerebras_interrupt');
+  const token = seedUserAndToken('sp_cerebras_interrupt');
   seedCerebras('interrupt');
   const sse = 'data: {"choices":[{"index":0,"delta":{"content":"partial"},"finish_reason":null}]}\n\n';
   const oldFetch = globalThis.fetch;

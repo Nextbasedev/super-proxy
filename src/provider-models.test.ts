@@ -26,7 +26,7 @@ function reset() {
   db.prepare('DELETE FROM users WHERE email != ?').run('admin@localhost');
 }
 
-function seedUser(raw = 'nbmg_provider_models_token') {
+function seedUser(raw = 'sp_provider_models_token') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled) VALUES ('pm@example.com','developer',0,1)").run().lastInsertRowid);
   db.prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled) VALUES (?,?,?,?,1)').run(userId, 'pm-token', sha256(raw), raw.slice(0, 14));

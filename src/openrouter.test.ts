@@ -29,7 +29,7 @@ function resetRuntimeTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = 'nbmg_openrouter_token') {
+function seedUserAndToken(raw = 'sp_openrouter_token') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled) VALUES ('dev@example.com','developer',0,1)").run().lastInsertRowid);
   const tokenId = Number(db.prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled) VALUES (?,?,?,?,1)').run(userId, 'dev-token', sha256(raw), raw.slice(0, 14)).lastInsertRowid);
@@ -70,7 +70,7 @@ test('OpenRouter route rejects unknown models before upstream', async () => {
 
 test('OpenRouter route forwards public HY3 free model and records zero cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_openrouter_allowed');
+  const token = seedUserAndToken('sp_openrouter_allowed');
   seedOpenRouter('allowed');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'openrouter', 'allow_all');
   let seenBody: any;
@@ -94,7 +94,7 @@ test('OpenRouter route forwards public HY3 free model and records zero cost', as
 
 test('OpenRouter defaults omitted model to public HY3 free model', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_openrouter_default_hy3');
+  const token = seedUserAndToken('sp_openrouter_default_hy3');
   seedOpenRouter('default-hy3');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -112,7 +112,7 @@ test('OpenRouter defaults omitted model to public HY3 free model', async () => {
 
 test('OpenRouter deny_all blocks public HY3 model', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_openrouter_denied');
+  const token = seedUserAndToken('sp_openrouter_denied');
   seedOpenRouter('denied');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'openrouter', 'deny_all');
   const app = Fastify();
@@ -124,7 +124,7 @@ test('OpenRouter deny_all blocks public HY3 model', async () => {
 
 test('OpenRouter content_filter is surfaced and force-logged', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_openrouter_filter');
+  const token = seedUserAndToken('sp_openrouter_filter');
   seedOpenRouter('filter');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'openrouter', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -141,7 +141,7 @@ test('OpenRouter content_filter is surfaced and force-logged', async () => {
 
 test('OpenRouter length finish_reason appends truncation marker without force-log', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_openrouter_length');
+  const token = seedUserAndToken('sp_openrouter_length');
   seedOpenRouter('length');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'openrouter', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -157,7 +157,7 @@ test('OpenRouter length finish_reason appends truncation marker without force-lo
 
 test('OpenRouter interrupted stream emits visible tail and force-logs', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_openrouter_interrupt');
+  const token = seedUserAndToken('sp_openrouter_interrupt');
   seedOpenRouter('interrupt');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'openrouter', 'allow_all');
   const sse = 'data: {"choices":[{"index":0,"delta":{"content":"partial"},"finish_reason":null}]}\n\n';
@@ -176,7 +176,7 @@ test('OpenRouter interrupted stream emits visible tail and force-logs', async ()
 
 test('OpenRouter 402 insufficient credits cools account and retries pool', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_or_402');
+  const token = seedUserAndToken('sp_or_402');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'openrouter', 'allow_all');
   const dead = seedOpenRouter('or-dead', 'sk-or-dead');
   const live = seedOpenRouter('or-live', 'sk-or-live');

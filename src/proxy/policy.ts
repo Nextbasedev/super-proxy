@@ -233,7 +233,7 @@ const SECRET_KEY_RE = /^(authorization|api[_-]?key|x[_-]api[_-]key|access[_-]?to
 
 function looksLikeSecret(value: unknown): boolean {
   if (typeof value !== 'string') return false;
-  return /^(?:sk-ant-|nbmg_|Bearer\s+|sk-[A-Za-z0-9]{20,})/.test(value);
+  return /^(?:sk-ant-|sp_|sp_|Bearer\s+|sk-[A-Za-z0-9]{20,})/.test(value);
 }
 
 function redact(value: unknown): unknown {
@@ -261,7 +261,7 @@ function redactText(text: string): string {
   return text
     .replace(/sk-ant-[A-Za-z0-9_-]+/g, '[REDACTED_ANTHROPIC_KEY]')
     .replace(/Bearer\s+[A-Za-z0-9._~+\/-]+=*/gi, 'Bearer [REDACTED]')
-    .replace(/nbmg_[A-Za-z0-9_-]+/g, '[REDACTED_PROXY_TOKEN]');
+    .replace(/\b(?:sp_|sp_)[A-Za-z0-9_-]+/g, '[REDACTED_PROXY_TOKEN]');
 }
 
 export function enforceAfterUsage(

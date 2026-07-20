@@ -6,9 +6,9 @@ the existing `role_limits` / `user_limits` ladder.
 
 Use it for things like:
 
-- "Grant `dixit@infinitycorp.tech` Anthropic Opus access for the next 7 days,
+- "Grant `user3@example.com` Anthropic Opus access for the next 7 days,
   capped at $50/day."
-- "Let `vishva@infinitycorp.tech` use Groq Whisper for a 24h audio test."
+- "Let `vishva@example.com` use Groq Whisper for a 24h audio test."
 - "Give a contractor a single-model grant for `claude-haiku-4` for 30 days,
   unlimited."
 
@@ -78,7 +78,7 @@ Response:
   {
     "id": 12,
     "user_id": 5,
-    "email": "dixit@infinitycorp.tech",
+    "email": "user3@example.com",
     "provider": "anthropic",
     "model_pattern": "claude-opus-4-7",
     "daily_usd": 50,
@@ -87,7 +87,7 @@ Response:
     "valid_until": 1716288000000,
     "reason": "release week",
     "created_by_user_id": 1,
-    "created_by_email": "daxitm2112@gmail.com",
+    "created_by_email": "admin@localhost",
     "created_at": "2026-05-14 06:00:00",
     "active": true,
     "status": "active",

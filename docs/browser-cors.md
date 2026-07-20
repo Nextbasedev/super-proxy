@@ -1,6 +1,6 @@
 # Browser CORS use
 
-NBMG supports credentialed cross-origin requests for both normal JSON responses and Server-Sent Events (SSE). A browser request with an `Origin` header receives:
+Super Proxy supports credentialed cross-origin requests for both normal JSON responses and Server-Sent Events (SSE). A browser request with an `Origin` header receives:
 
 - `Access-Control-Allow-Origin: <request Origin>` (never `*` when credentials are enabled)
 - `Access-Control-Allow-Credentials: true`
@@ -10,7 +10,7 @@ Preflight responses reflect the browser's `Access-Control-Request-Headers`. This
 
 ## Security policy
 
-There is currently no HTTP origin allowlist configuration in NBMG. To avoid a breaking policy change, the server preserves the existing `origin: true` behavior and reflects any request Origin. This permits browser access from any origin when the caller possesses a valid gateway token; CORS is not an authentication boundary. Tokens must not be embedded in public browser bundles. A configurable allowlist should be introduced separately before exposing NBMG to untrusted origins.
+There is currently no HTTP origin allowlist configuration in Super Proxy. To avoid a breaking policy change, the server preserves the existing `origin: true` behavior and reflects any request Origin. This permits browser access from any origin when the caller possesses a valid gateway token; CORS is not an authentication boundary. Tokens must not be embedded in public browser bundles. A configurable allowlist should be introduced separately before exposing Super Proxy to untrusted origins.
 
 The optional `GEMINI_LIVE_ALLOWED_ORIGINS` setting applies only to the Gemini Live WebSocket relay; WebSocket Origin validation is separate from HTTP CORS.
 
@@ -64,7 +64,7 @@ Non-stream JSON:
 ```sh
 curl -i 'https://gateway.example/v1/messages' \
   -H 'Origin: https://app.example' \
-  -H "Authorization: Bearer $NBMG_TOKEN" \
+  -H "Authorization: Bearer $sp_TOKEN" \
   -H 'Content-Type: application/json' \
   --data '{"model":"claude-sonnet-4-6","stream":false,"messages":[{"role":"user","content":"Hello"}]}'
 ```
@@ -74,7 +74,7 @@ SSE stream (`-N` disables curl response buffering):
 ```sh
 curl -iN 'https://gateway.example/v1/messages' \
   -H 'Origin: https://app.example' \
-  -H "Authorization: Bearer $NBMG_TOKEN" \
+  -H "Authorization: Bearer $sp_TOKEN" \
   -H 'Content-Type: application/json' \
   -H 'anthropic-version: 2023-06-01' \
   --data '{"model":"claude-sonnet-4-6","stream":true,"messages":[{"role":"user","content":"Hello"}]}'

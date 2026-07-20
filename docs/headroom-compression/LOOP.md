@@ -1,16 +1,16 @@
 # Headroom /v1/compress Adapter Loop
 
 - Owner: Jarvis
-- Repo: `/root/.openclaw/workspace/projects/model-gateway`
+- Repo: `/root/.openclaw/workspace/projects/super-proxy`
 - Branch: `fix/headroom-compress-adapter`
-- Worktree: `/root/.openclaw/workspace/projects/model-gateway-worktrees/headroom-compress-adapter`
+- Worktree: `/root/.openclaw/workspace/projects/super-proxy-worktrees/headroom-compress-adapter`
 - Evidence dir: `reports/coding-loops/headroom-compress-adapter/`
 
 ## Gates
 - Sidecar Docker build succeeds.
 - Sidecar `/health` returns healthy.
-- Sidecar `/v1/compress` returns 200 with NBMG contract from non-loopback caller path.
-- Existing NBMG tests/typecheck run or blockers recorded.
+- Sidecar `/v1/compress` returns 200 with Super Proxy contract from non-loopback caller path.
+- Existing Super Proxy tests/typecheck run or blockers recorded.
 
 ## Timeline
 - 2026-07-08: Confirmed prod sidecar should run in main compose network; Headroom `/v1/compress` 404s due loopback guard from Docker DNS peer.

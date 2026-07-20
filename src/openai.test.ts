@@ -25,7 +25,7 @@ function resetTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = `nbmg_openai_test_${Math.random().toString(36).slice(2)}`) {
+function seedUserAndToken(raw = `sp_openai_test_${Math.random().toString(36).slice(2)}`) {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled,full_body_logging) VALUES (?, 'developer', 0, 1, 0)").run(`dev-${Math.random().toString(36).slice(2)}@example.com`).lastInsertRowid);
   db.prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(userId, 'openai_codex', 'allow_all');
@@ -64,7 +64,7 @@ migrate();
 
 test('OpenAI realtime client secret uses Codex OAuth pool and normalizes GPT-Realtime-2 alias', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_openai_realtime');
+  const token = seedUserAndToken('sp_openai_realtime');
   seedCodexFresh('codex-realtime');
   let seenUrl = '';
   let seenHeaders: any;
@@ -145,7 +145,7 @@ test('Codex Responses records reasoning tokens, TTFT, and retry attribution on s
 
 test('OpenAI realtime client secret preserves session body shape', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_openai_realtime_session');
+  const token = seedUserAndToken('sp_openai_realtime_session');
   seedCodexFresh('codex-realtime-session');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -716,7 +716,7 @@ test('O8b Codex refresh failure surfaces relink error ONLY after all accounts ex
 
 test('OpenAI image edits accept multipart and forward raw body to API-key upstream', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_openai_image_edit_multipart');
+  const token = seedUserAndToken('sp_openai_image_edit_multipart');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'openai', 'allow_all');
   seedOpenAi('openai-images', 'sk-image');
   const boundary = 'nbmgBoundary';
@@ -743,7 +743,7 @@ test('OpenAI image edits accept multipart and forward raw body to API-key upstre
 
 test('OpenAI image edits multipart falls back to Codex image tool with parsed input image', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_openai_image_edit_multipart_codex');
+  const token = seedUserAndToken('sp_openai_image_edit_multipart_codex');
   seedCodexFresh('codex-image');
   const boundary = 'nbmgBoundary2';
   const body = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\ngpt-image-2\r\n--${boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\nmake it cinematic\r\n--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="source.png"\r\nContent-Type: image/png\r\n\r\nPNGDATA\r\n--${boundary}--\r\n`, 'utf8');
@@ -771,7 +771,7 @@ test('OpenAI image edits multipart falls back to Codex image tool with parsed in
 
 test('OpenAI image Codex fallback enforces token daily caps before upstream', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_openai_image_codex_cap');
+  const token = seedUserAndToken('sp_openai_image_codex_cap');
   getDb().prepare('UPDATE api_tokens SET cap_tokens_daily=1 WHERE id=?').run(token.tokenId);
   getDb().prepare("INSERT INTO usage_events (user_id,token_id,provider,endpoint,model,status_code,input_tokens,output_tokens) VALUES (?,?,?,?,?,?,?,?)")
     .run(token.userId, token.tokenId, 'openai_codex', '/v1/images/edits', 'gpt-image-2', 200, 1, 0);
@@ -790,7 +790,7 @@ test('OpenAI image Codex fallback enforces token daily caps before upstream', as
 
 test('OpenAI image edits multipart rejects missing image before upstream', async () => {
   resetTables();
-  const token = seedUserAndToken('nbmg_openai_image_edit_multipart_no_image');
+  const token = seedUserAndToken('sp_openai_image_edit_multipart_no_image');
   seedCodexFresh('codex-image-no-image');
   const boundary = 'nbmgBoundaryNoImage';
   const body = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\ngpt-image-2\r\n--${boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\nmake it cinematic\r\n--${boundary}--\r\n`, 'utf8');

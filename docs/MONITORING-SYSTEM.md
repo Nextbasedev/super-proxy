@@ -1,10 +1,10 @@
-# NBMG Monitoring System — Implementation Doc
+# Super Proxy Monitoring System — Implementation Doc
 
 Status: **draft / not implemented**
 Branch: `feat/monitoring-system`
 Author: Alan (2026-07-09)
 
-Full observability layer for the Nextbase Model Gateway: cache efficiency, token/cost
+Full observability layer for the Super Proxy: cache efficiency, token/cost
 accounting, reliability, and saturation — built on the existing `usage_events` pipeline,
 surfaced in the existing admin console, alerted via the existing Discord webhook.
 **No new infrastructure** (no Prometheus/Grafana): SQLite rollups + admin API + console tab.
@@ -407,7 +407,7 @@ degrade to NULLs, never throw).
 ## 10. Explicit Non-Goals
 
 - No Prometheus/Grafana/OTel — single-node SQLite is sufficient at current volume;
-  revisit if NBMG becomes multi-node.
+  revisit if Super Proxy becomes multi-node.
 - No per-request tracing UI beyond the existing `request_logs` viewer.
 - No billing reconciliation against provider invoices (future: manual monthly check of
   metered totals vs invoices).
@@ -417,7 +417,7 @@ degrade to NULLs, never throw).
 
 1. **Access model:** new `monitor` role below root admin. Root admin (dm_don, dev admin
    key) keeps everything. Monitor access = read-only `/admin/metrics/*` + monitoring tab,
-   granted by email allowlist env `MONITOR_ACCESS_EMAILS=yash@infinitycorp.tech,daxitm432@gmail.com,daxitm2112@gmail.com`.
+   granted by email allowlist env `MONITOR_ACCESS_EMAILS=monitor@example.com,admin@example.com,admin@localhost`.
    Auth = personal API tokens (Option A): token → user → email → allowlist check via new
    `requireMonitor()` guard. Every monitor view audited in `admin_audit_logs`.
 2. **Priorities:** cost/utilization + pool health + cache efficiency are ALL first-class

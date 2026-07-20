@@ -11,10 +11,10 @@ Clients authenticate with the normal Nextbase proxy token:
 
 ```bash
 curl -sS -i \
-  -H "Authorization: Bearer nbmg_..." \
+  -H "Authorization: Bearer sp_..." \
   -H "Content-Type: application/json" \
   -d '{"model":"openai/gpt-oss-120b","messages":[{"role":"user","content":"pong"}]}' \
-  https://nextbase-model-gateway.infinitycorp.tech/v1/groq/chat/completions
+  http://localhost:8080/v1/groq/chat/completions
 ```
 
 ## Routing behavior

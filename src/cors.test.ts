@@ -39,10 +39,10 @@ function resetAndSeed() {
   db.prepare('DELETE FROM usage_events').run();
   db.prepare('DELETE FROM api_tokens').run();
   db.prepare('DELETE FROM user_provider_access_modes').run();
-  db.prepare('DELETE FROM users WHERE email != ?').run('daxitm2112@gmail.com');
+  db.prepare('DELETE FROM users WHERE email != ?').run('admin@localhost');
   db.prepare('DELETE FROM provider_accounts').run();
 
-  const raw = 'nbmg_cors_browser_test_token';
+  const raw = 'sp_cors_browser_test_token';
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled,full_body_logging) VALUES ('cors@example.com','developer',0,1,0)").run().lastInsertRowid);
   db.prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(userId, 'anthropic', 'allow_all');
   db.prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled) VALUES (?,?,?,?,1)').run(userId, 'cors-token', sha256(raw), raw.slice(0, 14));

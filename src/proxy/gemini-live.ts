@@ -77,7 +77,7 @@ function tokenFromUpgrade(req: FastifyRequest): string | null {
 /**
  * Gemini Live (realtime) WebSocket relay.
  *
- * Client <-> NBMG <-> Google BidiGenerateContent. The gateway holds the Gemini
+ * Client <-> Super Proxy <-> Google BidiGenerateContent. The gateway holds the Gemini
  * key (never exposed to the client) and pins one pooled account per session.
  * The relay is transport-transparent: it forwards the client's first
  * BidiGenerateContentSetup verbatim, so any setup feature (translationConfig,

@@ -51,7 +51,7 @@ export function requireMonitor(req: FastifyRequest, reply: FastifyReply): Monito
     return { id: dash.id, email: dash.email, isRootAdmin: false };
   }
 
-  // Monitor allowlist via API token (Authorization: Bearer nbmg_…).
+  // Monitor allowlist via API token (Authorization: Bearer sp_…).
   const token = getProxyToken(req);
   if (token) {
     const row = getDb().prepare(`

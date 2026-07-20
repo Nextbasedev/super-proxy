@@ -31,7 +31,7 @@ function resetRuntimeTables() {
   db.prepare('DELETE FROM provider_accounts').run();
 }
 
-function seedUserAndToken(raw = 'nbmg_xai_token', email = 'dev-xai@example.com') {
+function seedUserAndToken(raw = 'sp_xai_token', email = 'dev-xai@example.com') {
   const db = getDb();
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled) VALUES (?,'developer',0,1)").run(email).lastInsertRowid);
   const tokenId = Number(db.prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled) VALUES (?,?,?,?,1)').run(userId, 'dev-token', sha256(raw), raw.slice(0, 14)).lastInsertRowid);
@@ -72,7 +72,7 @@ test('migration allows provider=xai and admin can create account', async () => {
 
 test('xAI route is off by default for non-admin users', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_default_off');
+  const token = seedUserAndToken('sp_xai_default_off');
   seedXai();
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -88,7 +88,7 @@ test('xAI route is off by default for non-admin users', async () => {
 
 test('xAI route forwards grok-4.5 and records usage with published pricing', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_allowed');
+  const token = seedUserAndToken('sp_xai_allowed');
   seedXai('allowed', 'xai-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -119,7 +119,7 @@ test('xAI route forwards grok-4.5 and records usage with published pricing', asy
 
 test('xAI responses route rejects media models and auto-routes realtime voice models', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_media_on_text');
+  const token = seedUserAndToken('sp_xai_media_on_text');
   seedXai('media-on-text', 'xai-media-on-text-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -159,7 +159,7 @@ test('xAI responses route rejects media models and auto-routes realtime voice mo
 
 test('xAI TTS forwards JSON, returns binary audio, and records character cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_tts');
+  const token = seedUserAndToken('sp_xai_tts');
   seedXai('tts', 'xai-tts-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -192,7 +192,7 @@ test('xAI TTS forwards JSON, returns binary audio, and records character cost', 
 
 test('xAI TTS rejects invalid voice_id', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_tts_bad_voice');
+  const token = seedUserAndToken('sp_xai_tts_bad_voice');
   seedXai('tts-bad-voice');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -209,7 +209,7 @@ test('xAI TTS rejects invalid voice_id', async () => {
 
 test('xAI TTS rejects text over 15000 characters', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_tts_too_long');
+  const token = seedUserAndToken('sp_xai_tts_too_long');
   seedXai('tts-too-long');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -226,7 +226,7 @@ test('xAI TTS rejects text over 15000 characters', async () => {
 
 test('xAI TTS defaults omitted voice_id to eve', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_tts_default_voice');
+  const token = seedUserAndToken('sp_xai_tts_default_voice');
   seedXai('tts-default-voice');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -245,7 +245,7 @@ test('xAI TTS defaults omitted voice_id to eve', async () => {
 
 test('xAI STT forwards multipart body and records duration cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_stt');
+  const token = seedUserAndToken('sp_xai_stt');
   seedXai('stt', 'xai-stt-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -277,7 +277,7 @@ test('xAI STT forwards multipart body and records duration cost', async () => {
 
 test('xAI STT missing duration records zero cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_stt_no_duration');
+  const token = seedUserAndToken('sp_xai_stt_no_duration');
   seedXai('stt-no-duration');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -296,7 +296,7 @@ test('xAI STT missing duration records zero cost', async () => {
 
 test('xAI realtime client secret mint forwards empty JSON, records zero cost, and logs metadata only', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_realtime_secret');
+  const token = seedUserAndToken('sp_xai_realtime_secret');
   seedXai('realtime', 'xai-realtime-access');
   getDb().prepare('UPDATE users SET full_body_logging=1 WHERE id=?').run(token.userId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -333,7 +333,7 @@ test('xAI realtime client secret mint forwards empty JSON, records zero cost, an
 
 test('xAI responses route auto-routes grok voice think fast to realtime client secret', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_responses_think_fast_route');
+  const token = seedUserAndToken('sp_xai_responses_think_fast_route');
   seedXai('responses-think-fast-route', 'xai-realtime-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -361,7 +361,7 @@ test('xAI responses route auto-routes grok voice think fast to realtime client s
 
 test('xAI realtime client secret supports grok voice think fast model', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_realtime_think_fast');
+  const token = seedUserAndToken('sp_xai_realtime_think_fast');
   seedXai('realtime-think-fast', 'xai-realtime-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -386,7 +386,7 @@ test('xAI realtime client secret supports grok voice think fast model', async ()
 
 test('xAI realtime client secret mint forwards model and voice params', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_realtime_params');
+  const token = seedUserAndToken('sp_xai_realtime_params');
   seedXai('realtime-params', 'xai-realtime-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -408,7 +408,7 @@ test('xAI realtime client secret mint forwards model and voice params', async ()
 
 test('xAI files upload forwards multipart body and records zero cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_files_upload');
+  const token = seedUserAndToken('sp_xai_files_upload');
   seedXai('files', 'xai-files-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -443,7 +443,7 @@ test('xAI files upload forwards multipart body and records zero cost', async () 
 
 test('xAI files list passes query through and records zero cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_files_list');
+  const token = seedUserAndToken('sp_xai_files_list');
   seedXai('files-list', 'xai-files-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -470,7 +470,7 @@ test('xAI files list passes query through and records zero cost', async () => {
 
 test('xAI files retrieve and delete forward file id', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_files_delete');
+  const token = seedUserAndToken('sp_xai_files_delete');
   seedXai('files-delete', 'xai-files-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const seen: Array<{ url: string; method: string }> = [];
@@ -502,7 +502,7 @@ test('xAI files retrieve and delete forward file id', async () => {
 
 test('xAI batch create forwards JSON verbatim and records zero cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_create');
+  const token = seedUserAndToken('sp_xai_batch_create');
   const accountId = seedXai('batch-create', 'xai-batch-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -538,7 +538,7 @@ test('xAI batch create forwards JSON verbatim and records zero cost', async () =
 
 test('xAI batch list passes query through and records zero cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_list');
+  const token = seedUserAndToken('sp_xai_batch_list');
   seedXai('batch-list', 'xai-batch-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -565,7 +565,7 @@ test('xAI batch list passes query through and records zero cost', async () => {
 
 test('xAI batch id operations reuse the creating account affinity', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_affinity');
+  const token = seedUserAndToken('sp_xai_batch_affinity');
   const accountA = seedXai('batch-a', 'xai-batch-a-token');
   seedXai('batch-b', 'xai-batch-b-token');
   seedXaiBatchJob('batch_1', accountA, token.userId, token.tokenId);
@@ -589,7 +589,7 @@ test('xAI batch id operations reuse the creating account affinity', async () => 
 
 test('xAI batch id operations reject unknown batch ids before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_unknown');
+  const token = seedUserAndToken('sp_xai_batch_unknown');
   seedXai('batch-unknown', 'xai-batch-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -606,7 +606,7 @@ test('xAI batch id operations reject unknown batch ids before upstream', async (
 
 test('xAI batch id operations do not fall back when mapped account is disabled', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_disabled');
+  const token = seedUserAndToken('sp_xai_batch_disabled');
   const accountId = seedXai('batch-disabled', 'xai-batch-disabled-token');
   seedXai('batch-fallback', 'xai-batch-fallback-token');
   seedXaiBatchJob('batch_disabled', accountId, token.userId, token.tokenId);
@@ -625,7 +625,7 @@ test('xAI batch id operations do not fall back when mapped account is disabled',
 
 test('xAI batch get forwards encoded batch id', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_get');
+  const token = seedUserAndToken('sp_xai_batch_get');
   const accountId = seedXai('batch-get', 'xai-batch-access');
   seedXaiBatchJob('batch_1', accountId, token.userId, token.tokenId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -653,7 +653,7 @@ test('xAI batch get forwards encoded batch id', async () => {
 
 test('xAI batch add requests forwards tagged-union request body verbatim and tolerates empty upstream body', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_requests');
+  const token = seedUserAndToken('sp_xai_batch_requests');
   const accountId = seedXai('batch-requests', 'xai-batch-access');
   seedXaiBatchJob('batch_1', accountId, token.userId, token.tokenId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -685,7 +685,7 @@ test('xAI batch add requests forwards tagged-union request body verbatim and tol
 
 test('xAI batch action passthrough forwards body without hardcoded cancel shape', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_action');
+  const token = seedUserAndToken('sp_xai_batch_action');
   const accountId = seedXai('batch-action', 'xai-batch-access');
   seedXaiBatchJob('batch_1', accountId, token.userId, token.tokenId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -715,7 +715,7 @@ test('xAI batch action passthrough forwards body without hardcoded cancel shape'
 
 test('xAI batch results forwards query and records zero cost', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_results');
+  const token = seedUserAndToken('sp_xai_batch_results');
   const accountId = seedXai('batch-results', 'xai-batch-access');
   seedXaiBatchJob('batch_1', accountId, token.userId, token.tokenId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -743,7 +743,7 @@ test('xAI batch results forwards query and records zero cost', async () => {
 
 test('xAI batch route re-encodes weird batch ids before upstream fetch', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_batch_encode');
+  const token = seedUserAndToken('sp_xai_batch_encode');
   const accountId = seedXai('batch-encode', 'xai-batch-access');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -764,7 +764,7 @@ test('xAI batch route re-encodes weird batch ids before upstream fetch', async (
 
 test('xAI route refreshes stored OAuth credential before forwarding', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_refresh');
+  const token = seedUserAndToken('sp_xai_refresh');
   const oldCredential = { type: 'oauth', provider: 'xai', access: 'old-access', refresh: 'refresh-token', expires: Date.now() - 1, tokenEndpoint: 'https://auth.x.ai/oauth/token' };
   const accountId = seedXai('oauth', JSON.stringify(oldCredential));
   getDb().prepare('UPDATE provider_accounts SET refresh_secret=?, expires_at=? WHERE id=?').run('refresh-token', Date.now() - 1, accountId);
@@ -794,7 +794,7 @@ test('xAI route refreshes stored OAuth credential before forwarding', async () =
 
 test('xAI content_filter is surfaced and force-logged', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_filter');
+  const token = seedUserAndToken('sp_xai_filter');
   seedXai('filter');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -811,7 +811,7 @@ test('xAI content_filter is surfaced and force-logged', async () => {
 
 test('xAI length finish_reason appends truncation marker without force-log', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_length');
+  const token = seedUserAndToken('sp_xai_length');
   seedXai('length');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -827,7 +827,7 @@ test('xAI length finish_reason appends truncation marker without force-log', asy
 
 test('xAI interrupted stream emits visible tail and force-logs', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_interrupt');
+  const token = seedUserAndToken('sp_xai_interrupt');
   seedXai('interrupt');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const sse = 'data: {"choices":[{"index":0,"delta":{"content":"partial"},"finish_reason":null}]}\n\n';
@@ -846,7 +846,7 @@ test('xAI interrupted stream emits visible tail and force-logs', async () => {
 
 test('xAI completed stream is recognized when SSE completion event is split across chunks', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_split_complete');
+  const token = seedUserAndToken('sp_xai_split_complete');
   seedXai('split-complete');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -870,7 +870,7 @@ test('xAI completed stream is recognized when SSE completion event is split acro
 
 test('xAI completed stream is recognized when final SSE event has no trailing delimiter', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_undelimited_complete');
+  const token = seedUserAndToken('sp_xai_undelimited_complete');
   seedXai('undelimited-complete');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -886,7 +886,7 @@ test('xAI completed stream is recognized when final SSE event has no trailing de
 
 test('xAI 403 spending-limit cools the account down and retries on the next pool account', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_quota');
+  const token = seedUserAndToken('sp_xai_quota');
   const deadAcct = seedXai('xai-out-of-credits', 'xai-dead');
   const liveAcct = seedXai('xai-live', 'xai-live');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -923,7 +923,7 @@ test('xAI 403 spending-limit cools the account down and retries on the next pool
 
 test('xAI 403 spending-limit surfaces error only after ALL pool accounts are exhausted', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_quota_all');
+  const token = seedUserAndToken('sp_xai_quota_all');
   seedXai('xai-dead-1', 'xai-dead-1');
   seedXai('xai-dead-2', 'xai-dead-2');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -945,7 +945,7 @@ test('xAI 403 spending-limit surfaces error only after ALL pool accounts are exh
 
 test('xAI image generation route forwards Grok Imagine requests and records usage', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image');
+  const token = seedUserAndToken('sp_xai_image');
   seedXai('image', 'xai-image-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -976,7 +976,7 @@ test('xAI image generation route forwards Grok Imagine requests and records usag
 
 test('xAI image edit route forwards single URL edits and bills upstream cost ticks', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image_edit_single');
+  const token = seedUserAndToken('sp_xai_image_edit_single');
   seedXai('image-edit-single', 'xai-image-edit-single-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -1006,7 +1006,7 @@ test('xAI image edit route forwards single URL edits and bills upstream cost tic
 
 test('xAI image edit route falls back to estimated cost when upstream cost ticks are absent', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image_edit_fallback_cost');
+  const token = seedUserAndToken('sp_xai_image_edit_fallback_cost');
   seedXai('image-edit-fallback-cost', 'xai-image-edit-fallback-cost-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -1024,7 +1024,7 @@ test('xAI image edit route falls back to estimated cost when upstream cost ticks
 
 test('xAI image edit route accepts data URI single sources', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image_edit_data_uri');
+  const token = seedUserAndToken('sp_xai_image_edit_data_uri');
   seedXai('image-edit-data-uri', 'xai-image-edit-data-uri-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -1043,7 +1043,7 @@ test('xAI image edit route accepts data URI single sources', async () => {
 
 test('xAI image edit route forwards multi-image edits and bills upstream cost ticks', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image_edit_multi');
+  const token = seedUserAndToken('sp_xai_image_edit_multi');
   seedXai('image-edit-multi', 'xai-image-edit-multi-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -1070,7 +1070,7 @@ test('xAI image edit route forwards multi-image edits and bills upstream cost ti
 
 test('xAI image edit route rejects more than three source images before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image_edit_too_many');
+  const token = seedUserAndToken('sp_xai_image_edit_too_many');
   seedXai('image-edit-too-many', 'xai-image-edit-too-many-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1087,7 +1087,7 @@ test('xAI image edit route rejects more than three source images before upstream
 
 test('xAI image edit route requires a source image before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image_edit_no_source');
+  const token = seedUserAndToken('sp_xai_image_edit_no_source');
   seedXai('image-edit-no-source', 'xai-image-edit-no-source-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1104,7 +1104,7 @@ test('xAI image edit route requires a source image before upstream', async () =>
 
 test('xAI image edit route rejects internal-host source URLs before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image_edit_internal');
+  const token = seedUserAndToken('sp_xai_image_edit_internal');
   seedXai('image-edit-internal', 'xai-image-edit-internal-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1120,7 +1120,7 @@ test('xAI image edit route rejects internal-host source URLs before upstream', a
 
 test('xAI image edit route bills explicit grok-imagine-image model from upstream cost ticks', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_image_edit_base_model');
+  const token = seedUserAndToken('sp_xai_image_edit_base_model');
   seedXai('image-edit-base-model', 'xai-image-edit-base-model-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -1142,7 +1142,7 @@ test('xAI image edit route bills explicit grok-imagine-image model from upstream
 
 test('xAI video generation route forwards Grok Imagine submit requests and records usage', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video');
+  const token = seedUserAndToken('sp_xai_video');
   seedXai('video', 'xai-video-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -1179,7 +1179,7 @@ test('xAI video generation route forwards Grok Imagine submit requests and recor
 
 test('xAI video generation bills default duration when omitted', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_default_duration');
+  const token = seedUserAndToken('sp_xai_video_default_duration');
   seedXai('video-default', 'xai-video-default-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -1200,7 +1200,7 @@ test('xAI video generation bills default duration when omitted', async () => {
 
 test('xAI video generation clamps duration before billing', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_clamped_duration');
+  const token = seedUserAndToken('sp_xai_video_clamped_duration');
   seedXai('video-clamped', 'xai-video-clamped-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -1221,7 +1221,7 @@ test('xAI video generation clamps duration before billing', async () => {
 
 test('xAI video edit route forwards source video object and bills submit floor', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_edit');
+  const token = seedUserAndToken('sp_xai_video_edit');
   seedXai('video-edit', 'xai-video-edit-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -1254,7 +1254,7 @@ test('xAI video edit route forwards source video object and bills submit floor',
 
 test('xAI video edit route normalizes bare string video to upstream object', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_edit_string');
+  const token = seedUserAndToken('sp_xai_video_edit_string');
   seedXai('video-edit-string', 'xai-video-edit-string-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -1273,7 +1273,7 @@ test('xAI video edit route normalizes bare string video to upstream object', asy
 
 test('xAI video edit route rejects internal-host source video before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_edit_internal');
+  const token = seedUserAndToken('sp_xai_video_edit_internal');
   seedXai('video-edit-internal', 'xai-video-edit-internal-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1289,7 +1289,7 @@ test('xAI video edit route rejects internal-host source video before upstream', 
 
 test('xAI video extension route forwards to upstream and bills submit floor', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_extend');
+  const token = seedUserAndToken('sp_xai_video_extend');
   seedXai('video-extend', 'xai-video-extend-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -1320,7 +1320,7 @@ test('xAI video extension route forwards to upstream and bills submit floor', as
 
 test('xAI reference-to-video routes to grok-imagine-video and forwards reference_images', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_ref_video');
+  const token = seedUserAndToken('sp_xai_ref_video');
   seedXai('video-ref', 'xai-video-ref-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
@@ -1353,7 +1353,7 @@ test('xAI reference-to-video routes to grok-imagine-video and forwards reference
 
 test('xAI reference-to-video rejects a pinned model that cannot do reference-to-video before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_ref_video_bad_model');
+  const token = seedUserAndToken('sp_xai_ref_video_bad_model');
   seedXai('video-ref-bad', 'xai-video-ref-bad-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1370,7 +1370,7 @@ test('xAI reference-to-video rejects a pinned model that cannot do reference-to-
 
 test('xAI plain video generation still defaults to grok-imagine-video-1.5-preview', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_plain_video_default');
+  const token = seedUserAndToken('sp_xai_plain_video_default');
   seedXai('video-plain', 'xai-video-plain-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
@@ -1390,7 +1390,7 @@ test('xAI plain video generation still defaults to grok-imagine-video-1.5-previe
 
 test('xAI video edit rejects a pinned model that cannot edit before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_edit_bad_model');
+  const token = seedUserAndToken('sp_xai_edit_bad_model');
   seedXai('video-edit-bad', 'xai-video-edit-bad-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1407,7 +1407,7 @@ test('xAI video edit rejects a pinned model that cannot edit before upstream', a
 
 test('xAI video status route forwards polling requests', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_status');
+  const token = seedUserAndToken('sp_xai_video_status');
   seedXai('video-status', 'xai-video-status-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const accountId = (getDb().prepare("SELECT id FROM provider_accounts WHERE label='video-status'").get() as any).id;
@@ -1438,7 +1438,7 @@ test('xAI video status route forwards polling requests', async () => {
 
 test('xAI video status true-ups edit jobs from upstream cost ticks once', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_trueup');
+  const token = seedUserAndToken('sp_xai_video_trueup');
   const accountId = seedXai('video-trueup', 'xai-video-trueup-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   getDb().prepare('INSERT INTO xai_video_jobs (request_id,provider_account_id,user_id,token_id,model,submit_cost_usd,trued_up,created_at) VALUES (?,?,?,?,?,?,0,?)')
@@ -1466,7 +1466,7 @@ test('xAI video status true-ups edit jobs from upstream cost ticks once', async 
 
 test('xAI video submit records account affinity and status poll reuses the same account', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_affinity');
+  const token = seedUserAndToken('sp_xai_video_affinity');
   seedXai('video-a', 'xai-video-a-token');
   seedXai('video-b', 'xai-video-b-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -1491,7 +1491,7 @@ test('xAI video submit records account affinity and status poll reuses the same 
 
 test('xAI media route full-body logging stores metadata only', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_media_log');
+  const token = seedUserAndToken('sp_xai_media_log');
   seedXai('media-log', 'xai-media-log-token');
   getDb().prepare('UPDATE users SET full_body_logging=1 WHERE id=?').run(token.userId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -1518,8 +1518,8 @@ test('xAI media route full-body logging stores metadata only', async () => {
 
 test('xAI video status is owner-scoped and rejects cross-user polling', async () => {
   resetRuntimeTables();
-  const owner = seedUserAndToken('nbmg_xai_owner', 'owner-xai@example.com');
-  const other = seedUserAndToken('nbmg_xai_other', 'other-xai@example.com');
+  const owner = seedUserAndToken('sp_xai_owner', 'owner-xai@example.com');
+  const other = seedUserAndToken('sp_xai_other', 'other-xai@example.com');
   seedXai('owner-video', 'xai-owner-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(owner.userId, 'xai', 'allow_all');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(other.userId, 'xai', 'allow_all');
@@ -1541,7 +1541,7 @@ test('xAI video status is owner-scoped and rejects cross-user polling', async ()
 
 test('xAI video status does not fall back when mapped account is disabled', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_disabled_affinity');
+  const token = seedUserAndToken('sp_xai_disabled_affinity');
   seedXai('mapped-video', 'xai-mapped-token');
   seedXai('fallback-video', 'xai-fallback-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -1565,7 +1565,7 @@ test('xAI video status does not fall back when mapped account is disabled', asyn
 
 test('xAI video status keeps edit-job affinity for disabled and unknown request ids', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_edit_affinity_errors');
+  const token = seedUserAndToken('sp_xai_edit_affinity_errors');
   const accountId = seedXai('mapped-edit-video', 'xai-mapped-edit-token');
   seedXai('fallback-edit-video', 'xai-fallback-edit-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -1587,7 +1587,7 @@ test('xAI video status keeps edit-job affinity for disabled and unknown request 
 
 test('xAI video status stays cost-free even when upstream returns a completed duration', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_video_poll_free');
+  const token = seedUserAndToken('sp_xai_video_poll_free');
   seedXai('poll-free-video', 'xai-poll-free-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -1612,7 +1612,7 @@ test('xAI video status stays cost-free even when upstream returns a completed du
 
 test('xAI media routes reject internal hosts before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_internal_media_url');
+  const token = seedUserAndToken('sp_xai_internal_media_url');
   seedXai('internal-media-url', 'xai-internal-media-url-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1636,7 +1636,7 @@ test('xAI media routes reject internal hosts before upstream', async () => {
 
 test('xAI media routes allow public URLs and image data URIs', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_public_media_url');
+  const token = seedUserAndToken('sp_xai_public_media_url');
   seedXai('public-media-url', 'xai-public-media-url-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const seenBodies: any[] = [];
@@ -1659,7 +1659,7 @@ test('xAI media routes allow public URLs and image data URIs', async () => {
 
 test('xAI media routes reject non-priced known models and invalid bodies before upstream', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_media_validation');
+  const token = seedUserAndToken('sp_xai_media_validation');
   seedXai('validation', 'xai-validation-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1681,7 +1681,7 @@ test('xAI media routes reject non-priced known models and invalid bodies before 
 
 test('xAI video status rejects dot-segment request ids', async () => {
   resetRuntimeTables();
-  const token = seedUserAndToken('nbmg_xai_bad_request_id');
+  const token = seedUserAndToken('sp_xai_bad_request_id');
   seedXai('bad-request-id', 'xai-bad-request-id-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;

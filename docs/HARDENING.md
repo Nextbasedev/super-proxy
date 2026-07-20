@@ -1,7 +1,7 @@
-# Container Hardening (non-root) — deploy-guard prerequisite
+# Container Hardening (non-root) — release-process prerequisite
 
-The model-gateway container now runs as a **non-root** user (`uid:gid = 10001:10001`)
-with a hardened `docker-compose.yml`. This is a prerequisite for the deploy-guard
+The super-proxy container now runs as a **non-root** user (`uid:gid = 10001:10001`)
+with a hardened `docker-compose.yml`. This is a prerequisite for the release-process
 cutover.
 
 ## What changed
@@ -25,10 +25,10 @@ cutover.
   `/app/data`, which is a writable bind mount). It can be added later with a
   `/tmp` tmpfs after verifying all write paths — see the comment in the compose
   file.
-- **Absolute prod paths** (so deploy-guard's release-dir model works regardless
+- **Absolute prod paths** (so release-process's release-dir model works regardless
   of the compose working directory):
-  - `env_file: /opt/services/model-gateway/.env`
-  - `volumes: /opt/services/model-gateway/data:/app/data`
+  - `env_file: /opt/services/super-proxy/.env`
+  - `volumes: /opt/services/super-proxy/data:/app/data`
 
 ## PROD PREREQUISITES (one-time, run by Don at/before deploy)
 
@@ -38,18 +38,18 @@ absolute paths, the host must be prepared **once**:
 1. **Chown the data dir** so the non-root container can write its sqlite DB:
 
    ```bash
-   sudo chown -R 10001:10001 /opt/services/model-gateway/data
+   sudo chown -R 10001:10001 /opt/services/super-proxy/data
    ```
 
 2. **Ensure `.env` exists at the absolute path** the compose file references:
 
    ```bash
-   test -f /opt/services/model-gateway/.env && echo "OK: .env present" || echo "MISSING: place .env here"
+   test -f /opt/services/super-proxy/.env && echo "OK: .env present" || echo "MISSING: place .env here"
    ```
 
 > ⚠️ **First-deploy warning:** If this PR ships through the OLD pipeline before
 > the chown is done, the freshly non-root container will fail to write
-> `/app/data/model-gateway.sqlite` and the migrate/boot step will error. This is
+> `/app/data/super-proxy.sqlite` and the migrate/boot step will error. This is
 > **rollback-safe** (no data is destroyed — the existing DB file is just not
 > writable by the new uid until chown'd). Run the `chown` above, then restart the
 > service.

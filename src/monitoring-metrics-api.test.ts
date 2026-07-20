@@ -5,10 +5,10 @@ import path from 'node:path';
 import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 
-const dbPath = path.join(os.tmpdir(), `model-gateway-metrics-${process.pid}-${Date.now()}.sqlite`);
+const dbPath = path.join(os.tmpdir(), `super-proxy-metrics-${process.pid}-${Date.now()}.sqlite`);
 process.env.DATABASE_PATH = dbPath;
 process.env.DEV_ADMIN_KEY = 'test-admin-key';
-process.env.MONITOR_ACCESS_EMAILS = 'yash@infinitycorp.tech, daxitm432@gmail.com';
+process.env.MONITOR_ACCESS_EMAILS = 'monitor@example.test, monitor2@example.test';
 
 const { migrate } = await import('./db/migrate.js');
 const { getDb } = await import('./db/index.js');
@@ -30,7 +30,7 @@ function seedUser(email: string): { userId: number; token: string } {
   return { userId: Number(u.lastInsertRowid), token: tok.raw };
 }
 
-const monitor = seedUser('yash@infinitycorp.tech'); // allowlisted
+const monitor = seedUser('monitor@example.test'); // allowlisted
 const outsider = seedUser('random@nowhere.dev');    // NOT allowlisted
 
 // Seed usage in the current hour so rollups land in the 24h window.
@@ -93,7 +93,7 @@ test('no auth gets 403', async () => {
 });
 
 test('disabled token gets 403 even when allowlisted', async () => {
-  const extra = seedUser('daxitm432@gmail.com');
+  const extra = seedUser('monitor2@example.test');
   db.prepare('UPDATE api_tokens SET enabled = 0 WHERE user_id = ?').run(extra.userId);
   const app = await buildApp();
   const res = await app.inject({ method: 'GET', url: '/admin/metrics/overview', headers: { authorization: `Bearer ${extra.token}` } });
@@ -173,7 +173,7 @@ test('top by user resolves emails and returns cost splits', async () => {
   const res = await app.inject({ method: 'GET', url: '/admin/metrics/top?dimension=user&by=cost&range=24h', headers: { 'x-admin-key': 'test-admin-key' } });
   const j = res.json();
   assert.ok(j.rows.length >= 1);
-  assert.equal(j.rows[0].label, 'yash@infinitycorp.tech');
+  assert.equal(j.rows[0].label, 'monitor@example.test');
   assert.ok(typeof j.rows[0].cost === 'object');
   await app.close();
 });

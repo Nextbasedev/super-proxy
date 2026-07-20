@@ -15,7 +15,7 @@ FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=4580 \
-    DATABASE_PATH=/app/data/model-gateway.sqlite
+    DATABASE_PATH=/app/data/super-proxy.sqlite
 
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
@@ -26,7 +26,7 @@ COPY docs ./docs
 COPY README.md ./.env.example ./
 
 # Create a dedicated non-root user+group with a FIXED uid/gid (10001:10001) to
-# match the thread-agent convention on this box. deploy-guard requires the
+# match the thread-agent convention on this box. release-process requires the
 # container to run as non-root.
 RUN groupadd --gid 10001 app \
     && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin app
