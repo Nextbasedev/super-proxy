@@ -120,11 +120,11 @@ test('xAI route forwards grok-4.5 and records usage with published pricing', asy
 test('xAI responses route rejects media models and auto-routes realtime voice models', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_media_on_text');
-  seedXai('media-on-text', 'xai-media-on-text-token');
+  seedXai('media-on-text', 'fixture-media-on-text-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
-  (globalThis as any).fetch = async () => { calls += 1; return new Response(JSON.stringify({ value: 'xai-realtime-client-secret-routed', expires_at: 999 }), { status: 200, headers: { 'content-type': 'application/json' } }); };
+  (globalThis as any).fetch = async () => { calls += 1; return new Response(JSON.stringify({ value: 'fixture-realtime-client-secret-routed', expires_at: 999 }), { status: 200, headers: { 'content-type': 'application/json' } }); };
   const app = Fastify();
   registerXaiProxy(app);
   const media = await app.inject({ method: 'POST', url: '/v1/xai/responses', headers: { authorization: `Bearer ${token.raw}` }, payload: { model: 'grok-imagine-video', input: 'make a video' } });
@@ -141,7 +141,7 @@ test('xAI responses route rejects media models and auto-routes realtime voice mo
   assert.equal(audio.json().error.code, 'wrong_endpoint_for_model');
   assert.match(audio.json().error.message, /\/v1\/xai\/tts/);
   assert.equal(realtime.statusCode, 200, realtime.body);
-  assert.equal(realtime.json().value, 'xai-realtime-client-secret-routed');
+  assert.equal(realtime.json().value, 'fixture-realtime-client-secret-routed');
   assert.equal(files.statusCode, 400, files.body);
   assert.equal(files.json().error.code, 'wrong_endpoint_for_model');
   assert.match(files.json().error.message, /\/v1\/xai\/files/);
@@ -303,7 +303,7 @@ test('xAI realtime client secret mint forwards empty JSON, records zero cost, an
   let seenUrl = '';
   let seenMethod = '';
   let seenBody = '';
-  const upstreamSecret = 'xai-realtime-client-secret-abc';
+  const upstreamSecret = 'fixture-realtime-client-secret-abc';
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async (url: string, init: any) => {
     seenUrl = String(url);
@@ -342,14 +342,14 @@ test('xAI responses route auto-routes grok voice think fast to realtime client s
   (globalThis as any).fetch = async (url: string, init: any) => {
     seenUrl = String(url);
     seenBody = JSON.parse(String(init.body));
-    return new Response(JSON.stringify({ value: 'xai-realtime-client-secret-from-responses', expires_at: 654 }), { status: 200, headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({ value: 'fixture-realtime-client-secret-from-responses', expires_at: 654 }), { status: 200, headers: { 'content-type': 'application/json' } });
   };
   const app = Fastify();
   registerXaiProxy(app);
   const res = await app.inject({ method: 'POST', url: '/v1/xai/responses', headers: { authorization: `Bearer ${token.raw}` }, payload: { model: 'grok-voice-think-fast-1.0', voice: 'eve', reasoning_effort: 'high' } });
   (globalThis as any).fetch = oldFetch;
   assert.equal(res.statusCode, 200, res.body);
-  assert.equal(res.json().value, 'xai-realtime-client-secret-from-responses');
+  assert.equal(res.json().value, 'fixture-realtime-client-secret-from-responses');
   assert.equal(seenUrl, 'https://api.x.ai/v1/realtime/client_secrets');
   assert.equal(seenBody.model, 'grok-voice-think-fast-1.0');
   assert.equal(seenBody.voice, 'eve');
@@ -368,7 +368,7 @@ test('xAI realtime client secret supports grok voice think fast model', async ()
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async (_url: string, init: any) => {
     seenBody = JSON.parse(String(init.body));
-    return new Response(JSON.stringify({ value: 'xai-realtime-client-secret-think-fast', expires_at: 789 }), { status: 200, headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({ value: 'fixture-realtime-client-secret-think-fast', expires_at: 789 }), { status: 200, headers: { 'content-type': 'application/json' } });
   };
   const app = Fastify();
   registerXaiProxy(app);
@@ -393,7 +393,7 @@ test('xAI realtime client secret mint forwards model and voice params', async ()
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async (_url: string, init: any) => {
     seenBody = JSON.parse(String(init.body));
-    return new Response(JSON.stringify({ value: 'xai-realtime-client-secret-def', expires_at: 456 }), { status: 200, headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({ value: 'fixture-realtime-client-secret-def', expires_at: 456 }), { status: 200, headers: { 'content-type': 'application/json' } });
   };
   const app = Fastify();
   registerXaiProxy(app);
@@ -566,8 +566,8 @@ test('xAI batch list passes query through and records zero cost', async () => {
 test('xAI batch id operations reuse the creating account affinity', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_batch_affinity');
-  const accountA = seedXai('batch-a', 'xai-batch-a-token');
-  seedXai('batch-b', 'xai-batch-b-token');
+  const accountA = seedXai('batch-a', 'fixture-batch-a-token');
+  seedXai('batch-b', 'fixture-batch-b-token');
   seedXaiBatchJob('batch_1', accountA, token.userId, token.tokenId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenAuth = '';
@@ -583,7 +583,7 @@ test('xAI batch id operations reuse the creating account affinity', async () => 
   seenAccount = String(res.headers['x-gateway-account']);
   (globalThis as any).fetch = oldFetch;
   assert.equal(res.statusCode, 200, res.body);
-  assert.equal(seenAuth, 'Bearer xai-batch-a-token');
+  assert.equal(seenAuth, 'Bearer fixture-batch-a-token');
   assert.equal(seenAccount, 'batch-a');
 });
 
@@ -607,8 +607,8 @@ test('xAI batch id operations reject unknown batch ids before upstream', async (
 test('xAI batch id operations do not fall back when mapped account is disabled', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_batch_disabled');
-  const accountId = seedXai('batch-disabled', 'xai-batch-disabled-token');
-  seedXai('batch-fallback', 'xai-batch-fallback-token');
+  const accountId = seedXai('batch-disabled', 'fixture-batch-disabled-token');
+  seedXai('batch-fallback', 'fixture-batch-fallback-token');
   seedXaiBatchJob('batch_disabled', accountId, token.userId, token.tokenId);
   getDb().prepare('UPDATE provider_accounts SET enabled=0 WHERE id=?').run(accountId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
@@ -946,7 +946,7 @@ test('xAI 403 spending-limit surfaces error only after ALL pool accounts are exh
 test('xAI image generation route forwards Grok Imagine requests and records usage', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image');
-  seedXai('image', 'xai-image-token');
+  seedXai('image', 'fixture-image-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
   let seenAuth = '';
@@ -964,7 +964,7 @@ test('xAI image generation route forwards Grok Imagine requests and records usag
   (globalThis as any).fetch = oldFetch;
   assert.equal(res.statusCode, 200, res.body);
   assert.equal(seenUrl, 'https://api.x.ai/v1/images/generations');
-  assert.equal(seenAuth, 'Bearer xai-image-token');
+  assert.equal(seenAuth, 'Bearer fixture-image-token');
   assert.equal(seenBody.model, 'grok-imagine-image-quality');
   assert.equal(seenBody.prompt, 'a startup command center');
   const ev = getDb().prepare("SELECT provider,endpoint,model,status_code,estimated_cost_usd FROM usage_events WHERE provider='xai' ORDER BY id DESC LIMIT 1").get() as any;
@@ -977,7 +977,7 @@ test('xAI image generation route forwards Grok Imagine requests and records usag
 test('xAI image edit route forwards single URL edits and bills upstream cost ticks', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image_edit_single');
-  seedXai('image-edit-single', 'xai-image-edit-single-token');
+  seedXai('image-edit-single', 'fixture-image-edit-single-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
   let seenBody: any;
@@ -1007,7 +1007,7 @@ test('xAI image edit route forwards single URL edits and bills upstream cost tic
 test('xAI image edit route falls back to estimated cost when upstream cost ticks are absent', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image_edit_fallback_cost');
-  seedXai('image-edit-fallback-cost', 'xai-image-edit-fallback-cost-token');
+  seedXai('image-edit-fallback-cost', 'fixture-image-edit-fallback-cost-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async () => new Response(JSON.stringify({ data: [{ url: 'https://images.x.ai/edited-fallback.jpg' }] }), { status: 200, headers: { 'content-type': 'application/json' } });
@@ -1025,7 +1025,7 @@ test('xAI image edit route falls back to estimated cost when upstream cost ticks
 test('xAI image edit route accepts data URI single sources', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image_edit_data_uri');
-  seedXai('image-edit-data-uri', 'xai-image-edit-data-uri-token');
+  seedXai('image-edit-data-uri', 'fixture-image-edit-data-uri-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -1044,7 +1044,7 @@ test('xAI image edit route accepts data URI single sources', async () => {
 test('xAI image edit route forwards multi-image edits and bills upstream cost ticks', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image_edit_multi');
-  seedXai('image-edit-multi', 'xai-image-edit-multi-token');
+  seedXai('image-edit-multi', 'fixture-image-edit-multi-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -1071,7 +1071,7 @@ test('xAI image edit route forwards multi-image edits and bills upstream cost ti
 test('xAI image edit route rejects more than three source images before upstream', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image_edit_too_many');
-  seedXai('image-edit-too-many', 'xai-image-edit-too-many-token');
+  seedXai('image-edit-too-many', 'fixture-image-edit-too-many-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1088,7 +1088,7 @@ test('xAI image edit route rejects more than three source images before upstream
 test('xAI image edit route requires a source image before upstream', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image_edit_no_source');
-  seedXai('image-edit-no-source', 'xai-image-edit-no-source-token');
+  seedXai('image-edit-no-source', 'fixture-image-edit-no-source-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1105,7 +1105,7 @@ test('xAI image edit route requires a source image before upstream', async () =>
 test('xAI image edit route rejects internal-host source URLs before upstream', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image_edit_internal');
-  seedXai('image-edit-internal', 'xai-image-edit-internal-token');
+  seedXai('image-edit-internal', 'fixture-image-edit-internal-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1121,7 +1121,7 @@ test('xAI image edit route rejects internal-host source URLs before upstream', a
 test('xAI image edit route bills explicit grok-imagine-image model from upstream cost ticks', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_image_edit_base_model');
-  seedXai('image-edit-base-model', 'xai-image-edit-base-model-token');
+  seedXai('image-edit-base-model', 'fixture-image-edit-base-model-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -1143,7 +1143,7 @@ test('xAI image edit route bills explicit grok-imagine-image model from upstream
 test('xAI video generation route forwards Grok Imagine submit requests and records usage', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video');
-  seedXai('video', 'xai-video-token');
+  seedXai('video', 'fixture-video-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
   let seenAuth = '';
@@ -1161,7 +1161,7 @@ test('xAI video generation route forwards Grok Imagine submit requests and recor
   (globalThis as any).fetch = oldFetch;
   assert.equal(res.statusCode, 200, res.body);
   assert.equal(seenUrl, 'https://api.x.ai/v1/videos/generations');
-  assert.equal(seenAuth, 'Bearer xai-video-token');
+  assert.equal(seenAuth, 'Bearer fixture-video-token');
   assert.equal(seenBody.model, 'grok-imagine-video-1.5-preview');
   assert.deepEqual(seenBody.image, { url: 'https://example.com/image.jpg' });
   assert.equal(seenBody.duration, 8);
@@ -1180,7 +1180,7 @@ test('xAI video generation route forwards Grok Imagine submit requests and recor
 test('xAI video generation bills default duration when omitted', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_default_duration');
-  seedXai('video-default', 'xai-video-default-token');
+  seedXai('video-default', 'fixture-video-default-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -1201,7 +1201,7 @@ test('xAI video generation bills default duration when omitted', async () => {
 test('xAI video generation clamps duration before billing', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_clamped_duration');
-  seedXai('video-clamped', 'xai-video-clamped-token');
+  seedXai('video-clamped', 'fixture-video-clamped-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -1222,7 +1222,7 @@ test('xAI video generation clamps duration before billing', async () => {
 test('xAI video edit route forwards source video object and bills submit floor', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_edit');
-  seedXai('video-edit', 'xai-video-edit-token');
+  seedXai('video-edit', 'fixture-video-edit-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
   let seenBody: any;
@@ -1255,7 +1255,7 @@ test('xAI video edit route forwards source video object and bills submit floor',
 test('xAI video edit route normalizes bare string video to upstream object', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_edit_string');
-  seedXai('video-edit-string', 'xai-video-edit-string-token');
+  seedXai('video-edit-string', 'fixture-video-edit-string-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -1274,7 +1274,7 @@ test('xAI video edit route normalizes bare string video to upstream object', asy
 test('xAI video edit route rejects internal-host source video before upstream', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_edit_internal');
-  seedXai('video-edit-internal', 'xai-video-edit-internal-token');
+  seedXai('video-edit-internal', 'fixture-video-edit-internal-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1290,7 +1290,7 @@ test('xAI video edit route rejects internal-host source video before upstream', 
 test('xAI video extension route forwards to upstream and bills submit floor', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_extend');
-  seedXai('video-extend', 'xai-video-extend-token');
+  seedXai('video-extend', 'fixture-video-extend-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
   let seenBody: any;
@@ -1321,7 +1321,7 @@ test('xAI video extension route forwards to upstream and bills submit floor', as
 test('xAI reference-to-video routes to grok-imagine-video and forwards reference_images', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_ref_video');
-  seedXai('video-ref', 'xai-video-ref-token');
+  seedXai('video-ref', 'fixture-video-ref-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenUrl = '';
   let seenBody: any;
@@ -1354,7 +1354,7 @@ test('xAI reference-to-video routes to grok-imagine-video and forwards reference
 test('xAI reference-to-video rejects a pinned model that cannot do reference-to-video before upstream', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_ref_video_bad_model');
-  seedXai('video-ref-bad', 'xai-video-ref-bad-token');
+  seedXai('video-ref-bad', 'fixture-video-ref-bad-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1371,7 +1371,7 @@ test('xAI reference-to-video rejects a pinned model that cannot do reference-to-
 test('xAI plain video generation still defaults to grok-imagine-video-1.5-preview', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_plain_video_default');
-  seedXai('video-plain', 'xai-video-plain-token');
+  seedXai('video-plain', 'fixture-video-plain-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let seenBody: any;
   const oldFetch = globalThis.fetch;
@@ -1391,7 +1391,7 @@ test('xAI plain video generation still defaults to grok-imagine-video-1.5-previe
 test('xAI video edit rejects a pinned model that cannot edit before upstream', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_edit_bad_model');
-  seedXai('video-edit-bad', 'xai-video-edit-bad-token');
+  seedXai('video-edit-bad', 'fixture-video-edit-bad-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1408,7 +1408,7 @@ test('xAI video edit rejects a pinned model that cannot edit before upstream', a
 test('xAI video status route forwards polling requests', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_status');
-  seedXai('video-status', 'xai-video-status-token');
+  seedXai('video-status', 'fixture-video-status-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const accountId = (getDb().prepare("SELECT id FROM provider_accounts WHERE label='video-status'").get() as any).id;
   getDb().prepare('INSERT INTO xai_video_jobs (request_id,provider_account_id,user_id,token_id,model,created_at) VALUES (?,?,?,?,?,?)')
@@ -1427,7 +1427,7 @@ test('xAI video status route forwards polling requests', async () => {
   (globalThis as any).fetch = oldFetch;
   assert.equal(res.statusCode, 200, res.body);
   assert.equal(seenUrl, 'https://api.x.ai/v1/videos/vid-123');
-  assert.equal(seenAuth, 'Bearer xai-video-status-token');
+  assert.equal(seenAuth, 'Bearer fixture-video-status-token');
   assert.equal(res.json().video.url, 'https://videos.x.ai/out.mp4');
   const ev = getDb().prepare("SELECT endpoint,model,status_code,estimated_cost_usd FROM usage_events WHERE provider='xai' ORDER BY id DESC LIMIT 1").get() as any;
   assert.equal(ev.endpoint, '/v1/xai/videos/:requestId');
@@ -1439,7 +1439,7 @@ test('xAI video status route forwards polling requests', async () => {
 test('xAI video status true-ups edit jobs from upstream cost ticks once', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_trueup');
-  const accountId = seedXai('video-trueup', 'xai-video-trueup-token');
+  const accountId = seedXai('video-trueup', 'fixture-video-trueup-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   getDb().prepare('INSERT INTO xai_video_jobs (request_id,provider_account_id,user_id,token_id,model,submit_cost_usd,trued_up,created_at) VALUES (?,?,?,?,?,?,0,?)')
     .run('edit-trueup', accountId, token.userId, token.tokenId, 'grok-imagine-video', 0.25, Date.now());
@@ -1467,8 +1467,8 @@ test('xAI video status true-ups edit jobs from upstream cost ticks once', async 
 test('xAI video submit records account affinity and status poll reuses the same account', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_affinity');
-  seedXai('video-a', 'xai-video-a-token');
-  seedXai('video-b', 'xai-video-b-token');
+  seedXai('video-a', 'fixture-video-a-token');
+  seedXai('video-b', 'fixture-video-b-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const seenAuths: string[] = [];
   const oldFetch = globalThis.fetch;
@@ -1492,7 +1492,7 @@ test('xAI video submit records account affinity and status poll reuses the same 
 test('xAI media route full-body logging stores metadata only', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_media_log');
-  seedXai('media-log', 'xai-media-log-token');
+  seedXai('media-log', 'fixture-media-log-token');
   getDb().prepare('UPDATE users SET full_body_logging=1 WHERE id=?').run(token.userId);
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
@@ -1520,7 +1520,7 @@ test('xAI video status is owner-scoped and rejects cross-user polling', async ()
   resetRuntimeTables();
   const owner = seedUserAndToken('sp_xai_owner', 'owner-xai@example.com');
   const other = seedUserAndToken('sp_xai_other', 'other-xai@example.com');
-  seedXai('owner-video', 'xai-owner-token');
+  seedXai('owner-video', 'fixture-owner-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(owner.userId, 'xai', 'allow_all');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(other.userId, 'xai', 'allow_all');
   let calls = 0;
@@ -1542,8 +1542,8 @@ test('xAI video status is owner-scoped and rejects cross-user polling', async ()
 test('xAI video status does not fall back when mapped account is disabled', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_disabled_affinity');
-  seedXai('mapped-video', 'xai-mapped-token');
-  seedXai('fallback-video', 'xai-fallback-token');
+  seedXai('mapped-video', 'fixture-mapped-token');
+  seedXai('fallback-video', 'fixture-fallback-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1566,8 +1566,8 @@ test('xAI video status does not fall back when mapped account is disabled', asyn
 test('xAI video status keeps edit-job affinity for disabled and unknown request ids', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_edit_affinity_errors');
-  const accountId = seedXai('mapped-edit-video', 'xai-mapped-edit-token');
-  seedXai('fallback-edit-video', 'xai-fallback-edit-token');
+  const accountId = seedXai('mapped-edit-video', 'fixture-mapped-edit-token');
+  seedXai('fallback-edit-video', 'fixture-fallback-edit-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   getDb().prepare('INSERT INTO xai_video_jobs (request_id,provider_account_id,user_id,token_id,model,submit_cost_usd,trued_up,created_at) VALUES (?,?,?,?,?,?,0,?)')
     .run('edit-disabled', accountId, token.userId, token.tokenId, 'grok-imagine-video', 0.25, Date.now());
@@ -1588,7 +1588,7 @@ test('xAI video status keeps edit-job affinity for disabled and unknown request 
 test('xAI video status stays cost-free even when upstream returns a completed duration', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_video_poll_free');
-  seedXai('poll-free-video', 'xai-poll-free-token');
+  seedXai('poll-free-video', 'fixture-poll-free-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const oldFetch = globalThis.fetch;
   (globalThis as any).fetch = async (url: string) => {
@@ -1613,7 +1613,7 @@ test('xAI video status stays cost-free even when upstream returns a completed du
 test('xAI media routes reject internal hosts before upstream', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_internal_media_url');
-  seedXai('internal-media-url', 'xai-internal-media-url-token');
+  seedXai('internal-media-url', 'fixture-internal-media-url-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1637,7 +1637,7 @@ test('xAI media routes reject internal hosts before upstream', async () => {
 test('xAI media routes allow public URLs and image data URIs', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_public_media_url');
-  seedXai('public-media-url', 'xai-public-media-url-token');
+  seedXai('public-media-url', 'fixture-public-media-url-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   const seenBodies: any[] = [];
   const oldFetch = globalThis.fetch;
@@ -1660,7 +1660,7 @@ test('xAI media routes allow public URLs and image data URIs', async () => {
 test('xAI media routes reject non-priced known models and invalid bodies before upstream', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_media_validation');
-  seedXai('validation', 'xai-validation-token');
+  seedXai('validation', 'fixture-validation-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;
@@ -1682,7 +1682,7 @@ test('xAI media routes reject non-priced known models and invalid bodies before 
 test('xAI video status rejects dot-segment request ids', async () => {
   resetRuntimeTables();
   const token = seedUserAndToken('sp_xai_bad_request_id');
-  seedXai('bad-request-id', 'xai-bad-request-id-token');
+  seedXai('bad-request-id', 'fixture-bad-request-id-token');
   getDb().prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(token.userId, 'xai', 'allow_all');
   let calls = 0;
   const oldFetch = globalThis.fetch;

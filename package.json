@@ -3,6 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "description": "Open-source multi-provider AI gateway with OpenAI- and Anthropic-compatible APIs, usage controls, and a self-hosted dashboard",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nextbasedev/super-proxy.git"
+  },
+  "homepage": "https://github.com/Nextbasedev/super-proxy#readme",
+  "bugs": {
+    "url": "https://github.com/Nextbasedev/super-proxy/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
@@ -10,6 +23,16 @@
     "test": "node scripts/run-tests.mjs",
     "db:migrate": "tsx src/db/migrate.ts"
   },
+  "keywords": [
+    "ai",
+    "llm",
+    "gateway",
+    "proxy",
+    "openai",
+    "anthropic",
+    "streaming",
+    "self-hosted"
+  ],
   "dependencies": {
     "@fastify/cookie": "11.0.2",
     "@fastify/cors": "11.2.0",
@@ -31,24 +54,5 @@
     "@types/ws": "8.18.1",
     "tsx": "4.21.0",
     "typescript": "6.0.3"
-  },
-  "description": "Super Proxy \u2014 open-source multi-provider AI gateway with OpenAI & Anthropic-compatible APIs, usage controls, and a self-host dashboard",
-  "license": "Apache-2.0",
-  "engines": {
-    "node": ">=20"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/example/super-proxy.git"
-  },
-  "keywords": [
-    "ai",
-    "llm",
-    "gateway",
-    "proxy",
-    "openai",
-    "anthropic",
-    "streaming",
-    "self-hosted"
-  ]
+  }
 }

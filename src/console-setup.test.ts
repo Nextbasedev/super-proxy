@@ -10,21 +10,32 @@ const consoleJs = path.join(publicDir, 'console.js');
 const consoleCss = path.join(publicDir, 'console.css');
 const indexHtml = path.join(publicDir, 'index.html');
 
+function joinedPattern(...parts: string[]): RegExp {
+  return new RegExp(parts.join(''), 'i');
+}
+
 test('dashboard assets ship in public/', () => {
   assert.ok(fs.existsSync(indexHtml), 'public/index.html');
   assert.ok(fs.existsSync(consoleJs), 'public/console.js');
   assert.ok(fs.existsSync(consoleCss), 'public/console.css');
 });
 
-test('dashboard has no private control-plane endpoints', () => {
-  const src = fs.readFileSync(consoleJs, 'utf8');
-  const html = fs.readFileSync(indexHtml, 'utf8');
-  for (const body of [src, html]) {
-    assert.doesNotMatch(body, /\/api\/internal\/oc\/aside\//);
-    assert.doesNotMatch(body, /aside_gateways/);
-    assert.doesNotMatch(body, /oc-fleet/i);
-    assert.doesNotMatch(body, /infinitycorp\.tech/i);
-    assert.doesNotMatch(body, /daxitdon/i);
+test('dashboard is neutral and contains no deployment-specific setup', () => {
+  const bodies = [
+    fs.readFileSync(consoleJs, 'utf8'),
+    fs.readFileSync(indexHtml, 'utf8'),
+  ];
+  const forbidden = [
+    joinedPattern('next', 'base'),
+    joinedPattern('oc', 'platform'),
+    joinedPattern('open', 'claw'),
+    joinedPattern('am', 'pere'),
+    joinedPattern('/api/', 'internal/oc/'),
+    joinedPattern('aside_', 'gateways'),
+    joinedPattern('oc-', 'fleet'),
+  ];
+  for (const body of bodies) {
+    for (const marker of forbidden) assert.doesNotMatch(body, marker);
   }
 });
 

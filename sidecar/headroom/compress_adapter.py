@@ -1,12 +1,8 @@
-"""NBMG compatibility adapter for Headroom's loopback-only /v1/compress.
+"""Adapter for Headroom's loopback-only ``/v1/compress`` endpoint.
 
-Headroom 0.30.0 exposes POST /v1/compress, but protects it with a
-loopback-only guard. In production NBMG and the sidecar run as separate
-containers on a private Docker network, so NBMG reaches the sidecar as
-http://headroom-proxy:8899 and Headroom returns 404.
-
-This adapter exposes only the narrow NBMG contract on :8899 and forwards it to
-the real Headroom proxy bound to 127.0.0.1:8898 inside the same container.
+Headroom 0.30.0 binds its compression API to loopback. This process exposes the
+same narrow contract on port 8899 and forwards it to the Headroom process at
+127.0.0.1:8898 inside the container.
 """
 
 from __future__ import annotations
@@ -22,9 +18,9 @@ from fastapi.responses import JSONResponse
 UPSTREAM = os.environ.get("HEADROOM_INTERNAL_URL", "http://127.0.0.1:8898")
 TIMEOUT_SECONDS = float(os.environ.get("HEADROOM_ADAPTER_TIMEOUT_SECONDS", "30"))
 
-logger = logging.getLogger("nbmg_headroom_adapter")
+logger = logging.getLogger("headroom_compress_adapter")
 
-app = FastAPI(title="NBMG Headroom Compress Adapter", version="1.0.0")
+app = FastAPI(title="Headroom Compress Adapter", version="1.0.0")
 
 
 async def _upstream_health() -> tuple[bool, dict[str, Any] | str]:
@@ -48,7 +44,7 @@ async def health() -> JSONResponse:
     return JSONResponse(
         status_code=200 if ok else 503,
         content={
-            "service": "nbmg-headroom-adapter",
+            "service": "headroom-compress-adapter",
             "status": "healthy" if ok else "unhealthy",
             "upstream_url": UPSTREAM,
             "upstream": upstream,

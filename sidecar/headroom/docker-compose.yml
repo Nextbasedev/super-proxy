@@ -1,10 +1,8 @@
 # Headroom context-compression sidecar for Super Proxy.
-# Runs alongside the gateway. In production, prefer the main super-proxy
-# docker-compose stack and set HEADROOM_URL=http://headroom-proxy:8899.
+# Run it alongside the gateway and set HEADROOM_URL=http://headroom-proxy:8899.
 #
-# This standalone compose is for local/manual testing only. It publishes the
-# adapter on loopback so curl http://127.0.0.1:8899/health works without exposing
-# the sidecar publicly.
+# The adapter is published on loopback so local health checks work without
+# exposing the sidecar on an external interface.
 #
 # Start:  cd sidecar/headroom && docker compose up -d
 # Health: curl http://127.0.0.1:8899/health

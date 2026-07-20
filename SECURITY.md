@@ -2,40 +2,50 @@
 
 ## Supported versions
 
-| Version | Supported |
-|---|---|
-| `0.x` (main) | Best-effort security fixes |
+Super Proxy is pre-1.0. Security fixes are applied to the current `main` branch
+and included in the next tagged release. Older commits and unmaintained forks
+are not supported.
+
+| Release line | Supported |
+| --- | --- |
+| Current `main` / latest tagged release | Yes |
+| Older snapshots | No |
 
 ## Reporting a vulnerability
 
-Please report security issues **privately**.
+Please report vulnerabilities privately through a
+[GitHub Security Advisory](https://github.com/Nextbasedev/super-proxy/security/advisories/new).
+Do not open a public issue for a suspected vulnerability.
 
-Include:
+Include, when possible:
 
-- Super Proxy version / commit  
-- Reproduction steps  
-- Impact assessment  
-- Any logs **with secrets redacted**
+- the affected Super Proxy release or commit;
+- reproduction steps or a minimal proof of concept;
+- the expected impact and attack prerequisites; and
+- relevant logs with secrets and personal data removed.
 
-Do **not** attach live API keys, session cookies, or production database dumps.
+Do not attach live API keys, session cookies, provider credentials, or
+production database dumps. Maintainers will acknowledge a report as soon as
+practical, coordinate remediation with the reporter, and disclose a fix after
+users have had a reasonable opportunity to update.
 
-## Hardening checklist (operators)
+## Operator hardening checklist
 
-- [ ] Run behind TLS-terminating reverse proxy  
-- [ ] Use strong admin credentials / SSO when available  
-- [ ] Issue least-privilege API tokens  
-- [ ] Set provider keys via environment or a real secret manager  
-- [ ] Restrict dashboard exposure (VPN / tailnet / IP allowlist)  
-- [ ] Back up and encrypt SQLite volumes  
-- [ ] Rotate tokens after staff changes  
-- [ ] Keep Node and dependencies updated  
+- [ ] Run behind a TLS-terminating reverse proxy.
+- [ ] Generate independent, high-entropy `SESSION_SECRET` and `DEV_ADMIN_KEY` values.
+- [ ] Restrict dashboard exposure to a trusted network or authenticated access layer.
+- [ ] Issue least-privilege API tokens and revoke unused tokens.
+- [ ] Store provider credentials outside tracked files.
+- [ ] Back up and encrypt the SQLite volume.
+- [ ] Keep the container base image, Node.js, and dependencies updated.
 
 ## Secret scanning
 
-Before release builds:
+Before release builds, run:
 
 ```bash
 ./scripts/secret-scan.sh
 ```
 
-The scan fails on common token shapes and internal markers that must not ship.
+The scan checks common credential shapes and repository-specific private
+markers. It supplements, but does not replace, dependency and code review.

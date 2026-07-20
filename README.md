@@ -1,80 +1,98 @@
 # Super Proxy
 
-**Open-source multi-provider AI gateway.**  
-One self-hosted endpoint for OpenAI-compatible and Anthropic-compatible APIs — with auth, usage limits, streaming, provider pools, and a built-in dashboard.
+**Open-source multi-provider AI gateway.**
 
-> Alpha self-host release (local tree). Not published to a public GitHub remote until explicitly approved.
+Super Proxy provides one self-hosted endpoint for OpenAI-compatible and
+Anthropic-compatible APIs, with authentication, usage limits, streaming,
+provider pools, and a built-in operator dashboard.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](./package.json)
 
----
-
 ## Why Super Proxy?
 
 | Pain | Super Proxy |
-|---|---|
-| Every provider has a different API shape | Unified **OpenAI** + **Anthropic** surfaces |
-| Keys scattered across tools | **API tokens** with per-token limits |
-| No visibility | **Usage**, cost accounting, health, dashboard |
-| One account rate-limit kills the app | **Provider pools** + governor |
-| Want Claude Code / OpenAI SDKs unchanged | Drop-in base URL override |
-
----
+| --- | --- |
+| Every provider has a different API shape | Unified OpenAI and Anthropic surfaces |
+| Keys are scattered across tools | Gateway API tokens with per-token limits |
+| Operators lack visibility | Usage, cost accounting, health, and dashboard views |
+| One account rate limit stops an app | Provider pools and concurrency controls |
+| Existing SDKs need a stable endpoint | Drop-in base URL overrides |
 
 ## Features
 
-- **OpenAI-compatible** chat/completions & related routes  
-- **Anthropic-compatible** `/v1/messages` (+ raw Anthropic passthrough where enabled)  
-- **Multi-provider**: Anthropic, OpenAI/Codex, Groq, Cerebras, Kimi, GLM, Gemini, OpenRouter, xAI, Deepgram, Fish, Runpod, search, Fusion  
-- **Streaming & non-streaming**  
-- **Token auth** + admin APIs  
-- **SQLite** persistence (simple self-host default)  
-- **Usage / policy / cost** hooks  
-- **Web dashboard** (`public/`) for operators  
-- **Docker Compose** one-command start  
-
----
+- OpenAI-compatible chat, completions, responses, and related routes
+- Anthropic-compatible `/v1/messages` routes
+- Multiple upstream providers, including Anthropic, OpenAI, Groq, Cerebras,
+  Kimi, GLM, Gemini, OpenRouter, xAI, Deepgram, Fish Audio, and Runpod
+- Streaming and non-streaming responses
+- Gateway token authentication and admin APIs
+- SQLite persistence
+- Usage, policy, and cost controls
+- Built-in operator dashboard
+- Docker Compose deployment
 
 ## Quick start
 
 ### Prerequisites
 
-- Node.js **20+**
-- npm 10+
+Choose either:
 
-### Local
+- Node.js 20+ and npm 10+; or
+- Docker with Docker Compose v2.
+
+`openssl` is used below to generate independent random secrets.
+
+### Configure secrets
 
 ```bash
-git clone <this-repo> super-proxy
+git clone https://github.com/Nextbasedev/super-proxy.git
 cd super-proxy
 cp .env.example .env
+sed -i.bak "s/^SESSION_SECRET=.*/SESSION_SECRET=$(openssl rand -hex 32)/" .env
+sed -i.bak "s/^DEV_ADMIN_KEY=.*/DEV_ADMIN_KEY=$(openssl rand -hex 32)/" .env
+rm -f .env.bak
+```
+
+Do not reuse the two values or commit `.env`. `SESSION_SECRET` signs browser
+sessions. `DEV_ADMIN_KEY` is a bootstrap administrator credential and should be
+protected like a password.
+
+### Start with Node.js
+
+```bash
 npm ci
 npm run build
 npm start
 ```
 
-Health:
+### Start with Docker Compose
 
 ```bash
-curl -sS http://127.0.0.1:8080/health
-```
-
-Dashboard: [http://127.0.0.1:8080/](http://127.0.0.1:8080/)
-
-### Docker Compose
-
-```bash
-cp .env.example .env
 docker compose up --build -d
-curl -sS http://127.0.0.1:8080/health
+docker compose ps
+docker compose exec super-proxy id
+curl -fsS http://127.0.0.1:8080/health
 ```
 
----
+The container runs as uid/gid `10001:10001`. Compose stores SQLite at
+`/app/data/super-proxy.sqlite` in the writable `super-proxy-data` named volume.
+
+### Bootstrap the dashboard
+
+1. Open [http://127.0.0.1:8080/](http://127.0.0.1:8080/).
+2. Expand **Use dev admin key instead**.
+3. Paste the `DEV_ADMIN_KEY` value from `.env` and press **Enter**.
+4. Add a user and issue a gateway API token from the **Identity** view.
+5. Store the displayed `sp_...` token immediately; it is not shown again.
+
+The dev admin key sends the `x-admin-key` header and is intended for initial
+self-host setup. Configure your normal authentication path and restrict the
+dashboard to a trusted network before exposing the service beyond localhost.
 
 ## Example requests
 
-Set:
+Set the URL and the gateway token created in the dashboard:
 
 ```bash
 export SUPER_PROXY_URL=http://127.0.0.1:8080
@@ -108,70 +126,50 @@ curl -sS "$SUPER_PROXY_URL/v1/messages" \
   }'
 ```
 
-See `examples/` for copy-paste scripts.
-
----
+See [`examples/`](./examples) for scripts.
 
 ## Configuration
 
 | Variable | Default | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `PORT` | `8080` | HTTP port |
 | `DATABASE_PATH` | `./data/super-proxy.sqlite` | SQLite file |
 | `ADMIN_EMAIL` | `admin@localhost` | Bootstrap admin identity |
+| `SESSION_SECRET` | none | Browser session signing secret |
+| `DEV_ADMIN_KEY` | none | Self-host admin bootstrap key |
 | `NODE_ENV` | `development` | Runtime mode |
-| `*_UPSTREAM_URL` | provider defaults | Override upstream bases |
+| `*_UPSTREAM_URL` | provider defaults | Optional upstream URL overrides |
 
-Full list: [`.env.example`](./.env.example)
+See [`.env.example`](./.env.example) and
+[`docs/configuration.md`](./docs/configuration.md) for details. Never commit
+provider credentials or real gateway tokens.
 
-**Never commit real API keys.** Provider credentials belong in your environment or admin-configured secret store.
-
----
-
-## Architecture
+## Architecture and documentation
 
 ```text
-Client SDK / Claude Code / curl
-        │
-        ▼
-┌───────────────────────┐
-│      Super Proxy      │
-│  auth · policy · route│
-│  pools · usage · admin│
-└───────────┬───────────┘
-            │
-            ▼
+Client SDK / CLI / curl
+        |
+        v
++-----------------------+
+|      Super Proxy      |
+| auth, policy, routing |
+| pools, usage, admin   |
++-----------+-----------+
+            |
+            v
    Upstream model providers
 ```
 
-Extension points (stable, minimal):
+Public extension points include `GatewayPlugin`, `ProviderAdapter`,
+`AuthProvider`, and `SecretStore`.
 
-- `GatewayPlugin`
-- `ProviderAdapter`
-- `AuthProvider`
-- `SecretStore`
-
-Details: [`ARCHITECTURE.md`](./ARCHITECTURE.md) · scope: [`OSS-SCOPE.md`](./OSS-SCOPE.md)
-
-More docs:
-
+- [Architecture](./ARCHITECTURE.md)
+- [Project scope](./OSS-SCOPE.md)
 - [Getting started](./docs/getting-started.md)
 - [Configuration](./docs/configuration.md)
 - [Deployment](./docs/deployment.md)
 - [Providers](./docs/providers.md)
-- [Auth](./docs/auth.md)
-
----
-
-## Dashboard
-
-The built-in operator console is served from `public/`:
-
-- session/bootstrap against the local gateway  
-- token and usage oriented workflows  
-- no external control-plane dependency required for basic self-host  
-
----
+- [Authentication](./docs/auth.md)
 
 ## Development
 
@@ -179,21 +177,21 @@ The built-in operator console is served from `public/`:
 npm ci
 npm run build
 npm test
+shellcheck scripts/*.sh examples/*.sh
 ./scripts/secret-scan.sh
 ```
 
-Contributing: [`CONTRIBUTING.md`](./CONTRIBUTING.md)  
-Security: [`SECURITY.md`](./SECURITY.md)
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md),
+[`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md), and
+[`SECURITY.md`](./SECURITY.md).
 
----
+## Release status
+
+Super Proxy is pre-1.0. Interfaces and configuration may change between minor
+releases; use Git tags and GitHub Releases as the source of truth for published
+versions.
 
 ## License
 
-Apache License 2.0 — see [`LICENSE`](./LICENSE).
-
----
-
-## Status
-
-Wave 1 focuses on a **complete self-host gateway + dashboard**.  
-Private production control-plane integrations (fleet orchestration, company-specific deploy wiring) stay out of this tree on purpose.
+Licensed under the Apache License 2.0. See [`LICENSE`](./LICENSE) and
+[`NOTICE`](./NOTICE).

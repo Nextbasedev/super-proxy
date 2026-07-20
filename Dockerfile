@@ -14,7 +14,7 @@ RUN npm run build
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
-    PORT=4580 \
+    PORT=8080 \
     DATABASE_PATH=/app/data/super-proxy.sqlite
 
 COPY package.json package-lock.json ./
@@ -23,23 +23,17 @@ RUN npm ci --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY public ./public
 COPY docs ./docs
-COPY README.md ./.env.example ./
+COPY README.md LICENSE NOTICE .env.example ./
 
-# Create a dedicated non-root user+group with a FIXED uid/gid (10001:10001) to
-# match the thread-agent convention on this box. release-process requires the
-# container to run as non-root.
+# Keep the runtime unprivileged and give its fixed uid/gid ownership of the
+# persistent SQLite directory. A fresh named volume inherits this ownership.
 RUN groupadd --gid 10001 app \
-    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin app
+    && useradd --uid 10001 --gid 10001 --no-create-home --shell /usr/sbin/nologin app \
+    && mkdir -p /app/data \
+    && chown 10001:10001 /app/data
 
-# Ensure the data dir (sqlite lives here) and app tree are owned by the runtime
-# uid:gid so migrations/server can write the DB.
-# NOTE (prod): the host bind mount at /app/data must ALSO be chown'd to
-# 10001:10001 on the host, otherwise the container cannot write its sqlite DB.
-# See docs/HARDENING.md.
-RUN mkdir -p /app/data && chown -R 10001:10001 /app/data /app
 VOLUME ["/app/data"]
-EXPOSE 4580
-
+EXPOSE 8080
 USER 10001:10001
 
 CMD ["sh", "-c", "node dist/db/migrate.js && node dist/server.js"]

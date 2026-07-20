@@ -6,10 +6,9 @@ import { catalogModelIdsWithCapability } from './model-catalog.js';
 export const DEFAULT_GLM_MODEL = 'glm-5.2';
 export const KNOWN_GLM_MODELS = new Set(catalogModelIdsWithCapability('glm', 'chat'));
 
-// z.ai GLM Coding Plan PER-MODEL concurrency limits (max simultaneous in-flight
-// requests per model, per subscription seat/account). Exceeding these triggers
-// upstream 429s, so we cap locally per (account, model). Values confirmed by Don
-// from the z.ai plan dashboard (2026-06-25).
+// Conservative per-model concurrency limits for z.ai GLM accounts. Exceeding
+// an upstream account's capacity triggers 429s, so requests are capped locally
+// per (account, model).
 export const GLM_MODEL_CONCURRENCY: Record<string, number> = {
   'glm-5.2': 10,
   'glm-5.1': 10,

@@ -29,7 +29,7 @@ function resetAndSeed(raw: string, label: string) {
   const userId = Number(db.prepare("INSERT INTO users (email,role,is_admin,enabled,full_body_logging) VALUES ('raw-lifecycle@example.com','developer',0,1,0)").run().lastInsertRowid);
   db.prepare('INSERT INTO user_provider_access_modes (user_id,provider,mode) VALUES (?,?,?)').run(userId, 'anthropic', 'allow_all');
   db.prepare('INSERT INTO api_tokens (user_id,label,token_hash,token_prefix,enabled) VALUES (?,?,?,?,1)').run(userId, 'raw-lifecycle-token', sha256(raw), raw.slice(0, 14));
-  db.prepare("INSERT INTO provider_accounts (provider,label,secret,status,enabled) VALUES ('anthropic',?,?, 'active',1)").run(label, 'sk-ant-oat-raw-lifecycle');
+  db.prepare("INSERT INTO provider_accounts (provider,label,secret,status,enabled) VALUES ('anthropic',?,?, 'active',1)").run(label, 'sk-ant-oat-fixture');
 }
 
 async function buildApp(withCors = false) {

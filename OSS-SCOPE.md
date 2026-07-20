@@ -1,84 +1,52 @@
-# Super Proxy — OSS Scope
+# Super Proxy project scope
 
-Working name: **super-proxy**  
-Source baseline: super-proxy `origin/main` @ `787d2dd`  
-Status: **local only** — do not create or push a public GitHub repository until Don explicitly approves.
+Super Proxy is an open-source, self-hosted AI gateway. It provides one
+operator-managed service for routing authenticated client requests to multiple
+model providers.
 
-## Wave 1 (in scope)
+## Included
 
-- Multi-provider AI gateway core
-- OpenAI-compatible and Anthropic-compatible HTTP surfaces
-- Provider adapters / pools / governor
+- OpenAI-compatible and Anthropic-compatible HTTP APIs
 - Streaming and non-streaming request paths
-- API token authentication
+- Provider adapters, account pools, and concurrency controls
+- Gateway API tokens with policy and usage identity
 - SQLite persistence and migrations
-- Usage / cost accounting and basic policy limits
-- Model catalog endpoint(s)
-- Health and metrics endpoints
-- Docker Compose self-host path
-- Operator dashboard (`public/`)
-- Fusion only if it has no private control-plane dependency
+- Usage, cost, health, metrics, and basic policy surfaces
+- Model discovery endpoints
+- Built-in operator dashboard
+- Docker and Docker Compose deployment
+- Small extension contracts for authentication, providers, secrets, and plugins
 
-## Wave 1 (out of scope)
+## Not included
 
-- Aside control plane (`aside*`)
-- OC fleet integration (`oc-fleet*`)
-- Production release-process / host-specific runbooks
-- Company emails, Firebase project IDs, internal domains, account labels
-- Private control-plane UIs only — **operator dashboard in `public/` is in scope**
-- Private git history from production repository
+The public project does not include organization-specific infrastructure,
+host inventories, deployment credentials, proprietary control planes, or
+private operational runbooks. Integrations that require those systems belong
+in separate deployments or plugins and must not be prerequisites for the
+self-hosted gateway.
 
-## Architecture contracts (wave 1)
+Super Proxy is not a hosted service and does not provide provider accounts or
+model-provider credentials. Operators remain responsible for upstream terms,
+network access, data handling, backups, and deployment security.
 
-Prefer a single-package TypeScript gateway:
+## Architecture principles
 
-```text
-src/
-  app.ts              # buildApp()
-  server.ts           # listen only
-  config/
-  core/
-  auth/
-  secrets/
-  providers/
-  routes/             # migrated from proxy/* over time
-  usage/
-  db/
-  monitoring/
-  plugins/
-```
-
-Minimum extension points (keep small and real):
+The project favors a single TypeScript service with explicit Fastify routes,
+provider modules, and SQLite persistence. Public extension points are kept
+small and implementation-driven:
 
 - `GatewayPlugin`
 - `ProviderAdapter`
 - `AuthProvider`
 - `SecretStore`
 
-Do **not** invent unused abstraction layers.
+New abstractions should solve a demonstrated integration need. Public gateway
+routes should remain backward-compatible where practical; pre-1.0 interfaces
+may still evolve with release notes and migration guidance.
 
-## Agent ownership
+## Contribution boundary
 
-| Agent | Owns | Must not touch |
-|---|---|---|
-| A runtime | `src/providers/**`, `src/proxy/**`→routes, `src/normalize/**`, `src/fusion/**`, related tests | docs package metadata beyond need; auth/db ownership files |
-| B platform | `src/auth/**`, `src/db/**`, `src/admin/**`, usage/policy/cost, monitoring sanitize, config defaults | provider transport implementations; marketing docs body |
-| C oss-dx | README, ARCHITECTURE, CONTRIBUTING, LICENSE, SECURITY, .env.example, Docker polish, CI local, secret-scan, examples | runtime business logic |
-
-## Non-negotiable constraints
-
-- Local filesystem only under `projects/super-proxy*`
-- No `gh repo create`, no public visibility change, no push to GitHub
-- No secrets in tree; no real tokens in tests
-- No private markers: aside, oc-fleet, infinitycorp, Daxitdon, ampere project ids, release-process hosts
-- Preserve behavior of public gateway routes where practical
-- All commits signed if agent environment supports signing; otherwise normal commits and parent will re-sign on integrate
-- Fresh git history only (already initialized in super-proxy)
-
-## Definition of done (integration)
-
-- `npm ci && npm run build && npm test` pass
-- Docker health smoke passes
-- Secret/internal-reference scan clean
-- Docs enable clean-machine quickstart
-- Parent reports to Don; still not public
+Contributions must not include live credentials, private customer data,
+internal hostnames, employee-only identifiers, or copied proprietary source
+history. See [`CONTRIBUTING.md`](./CONTRIBUTING.md),
+[`SECURITY.md`](./SECURITY.md), and [`LICENSE`](./LICENSE).

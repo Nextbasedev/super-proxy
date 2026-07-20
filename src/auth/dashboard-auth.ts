@@ -7,6 +7,10 @@ import { getDb } from '../db/index.js';
 /** Dashboard session cookie name (neutral OSS branding). */
 export const SESSION_COOKIE = 'sp_session';
 const SESSION_MAX_AGE_SEC = 7 * 24 * 3600;
+const MIN_SESSION_SECRET_BYTES = 32;
+
+let ephemeralSessionSecret: string | undefined;
+let warnedAboutEphemeralSecret = false;
 
 function firebaseConfigured(): boolean {
   return Boolean(config.firebaseProjectId && config.firebaseProjectId.trim());
@@ -20,9 +24,41 @@ function initFirebase(): boolean {
 }
 
 function secret(): string {
-  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
-  // Deterministic fallback for local/dev only. Prefer SESSION_SECRET in production.
-  return crypto.createHash('sha256').update(`${config.adminEmail}:super-proxy-session`).digest('hex');
+  const configuredSecret = process.env.SESSION_SECRET;
+  if (configuredSecret) {
+    if (
+      config.nodeEnv === 'production'
+      && Buffer.byteLength(configuredSecret.trim(), 'utf8') < MIN_SESSION_SECRET_BYTES
+    ) {
+      throw new Error(
+        `SESSION_SECRET must be a cryptographically random value of at least ${MIN_SESSION_SECRET_BYTES} bytes in production`,
+      );
+    }
+    return configuredSecret;
+  }
+
+  if (config.nodeEnv === 'production') {
+    throw new Error(
+      `SESSION_SECRET must be set to a cryptographically random value of at least ${MIN_SESSION_SECRET_BYTES} bytes in production`,
+    );
+  }
+
+  // Keep local development convenient without deriving credentials from public or
+  // otherwise predictable configuration. This value intentionally dies with the
+  // process, invalidating local dashboard sessions after a restart.
+  ephemeralSessionSecret ??= crypto.randomBytes(MIN_SESSION_SECRET_BYTES).toString('hex');
+  if (!warnedAboutEphemeralSecret) {
+    warnedAboutEphemeralSecret = true;
+    console.warn(
+      '[security] Using a process-ephemeral SESSION_SECRET because none is configured. Dashboard sessions will be invalid after restart.',
+    );
+  }
+  return ephemeralSessionSecret;
+}
+
+/** Validate dashboard session signing before migrations, listeners, or background work start. */
+export function preflightDashboardAuth(): void {
+  void secret();
 }
 
 function sign(email: string, ts: number): string {

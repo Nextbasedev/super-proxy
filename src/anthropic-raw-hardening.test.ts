@@ -101,7 +101,7 @@ test('raw Anthropic route strips every gateway credential alias and hop-by-hop h
 test('production compression middleware cannot mutate the raw Anthropic route', async () => {
   resetTables();
   const raw = 'anthropic_raw_compression_token';
-  seed(raw, 'raw-compression-oauth', 'sk-ant-oat-raw-compression');
+  seed(raw, 'raw-compression-oauth', 'sk-ant-oat-fixture');
   const payload = {
     model: 'claude-opus-4-7',
     stream: false,

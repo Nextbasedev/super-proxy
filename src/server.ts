@@ -25,7 +25,7 @@ import { registerRunpodProxy } from './proxy/runpod.js';
 import { registerSearchProxy } from './proxy/search.js';
 import { registerFusionProxy } from './proxy/fusion.js';
 import { registerCompressionMiddleware } from './proxy/compress.js';
-import { registerDashboardAuthRoutes } from './auth/dashboard-auth.js';
+import { preflightDashboardAuth, registerDashboardAuthRoutes } from './auth/dashboard-auth.js';
 import { registerSelfApi } from './self-api.js';
 import { registerProviderModelsRoutes } from './api/provider-models.js';
 import { startRollupLoop } from './monitoring/rollup.js';
@@ -33,6 +33,7 @@ import { registerMetricsApi } from './monitoring/metrics-api.js';
 import { registerBrowserCors } from './http/cors.js';
 
 async function main() {
+  preflightDashboardAuth();
   migrate();
   // Redact credentials from request logs. The Gemini Live WS relay accepts the
   // gateway token via query param (browsers can't set WS headers), so the raw URL
