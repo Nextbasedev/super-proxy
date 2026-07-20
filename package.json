@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc -p tsconfig.json",
-    "test": "tsx --test 'src/*.test.ts' 'src/**/*.test.ts'",
+    "test": "node scripts/run-tests.mjs",
     "db:migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
