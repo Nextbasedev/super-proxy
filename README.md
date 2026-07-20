@@ -153,6 +153,14 @@ Extension points (stable, minimal):
 
 Details: [`ARCHITECTURE.md`](./ARCHITECTURE.md) · scope: [`OSS-SCOPE.md`](./OSS-SCOPE.md)
 
+More docs:
+
+- [Getting started](./docs/getting-started.md)
+- [Configuration](./docs/configuration.md)
+- [Deployment](./docs/deployment.md)
+- [Providers](./docs/providers.md)
+- [Auth](./docs/auth.md)
+
 ---
 
 ## Dashboard
