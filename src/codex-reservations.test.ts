@@ -50,7 +50,7 @@ ins.run(18, 'openai_codex', 'shared-a', 'sec18', 'ref18', 'acc18', future);
 ins.run(21, 'openai_codex', 'shared-b', 'sec21', 'ref21', 'acc21', future);
 ins.run(33, 'openai_codex', 'yourdev.mail@gmail.com', 'sec33', 'ref33', 'acc33', future);
 
-const reserved = ['daxitm2112@gmail.com', 'sanketkheni.pro@gmail.com', 'dixit@infinitycorp.tech'];
+const reserved = ['reserved-user@example.com', 'teammate@example.com', 'partner@example.com'];
 const insRes = db.prepare('INSERT INTO codex_account_reservations (account_id,email) VALUES (?,?)');
 for (const e of reserved) insRes.run(33, e);
 
@@ -87,7 +87,7 @@ test('reserved user falls back to shared pool when 33 is cooled', () => {
   // Cool down 33.
   db.prepare("UPDATE provider_accounts SET status='cooldown', cooldown_until=? WHERE id=33").run(Date.now() + 3600_000);
   try {
-    const ordered = pool.selectStickyCodexAccounts('daxitm2112@gmail.com:tok:conv-2', [], 'daxitm2112@gmail.com');
+    const ordered = pool.selectStickyCodexAccounts('reserved-user@example.com:tok:conv-2', [], 'reserved-user@example.com');
     const ids = ordered.map((a) => a.id).sort();
     assert.deepEqual(ids, [18, 21], 'should fall back to shared pool, 33 unavailable');
   } finally {
@@ -96,7 +96,7 @@ test('reserved user falls back to shared pool when 33 is cooled', () => {
 });
 
 test('email matching is case-insensitive and trimmed', () => {
-  const ids = pool.selectCodexAccounts([], '  DAXITM2112@gmail.com  ').map((a) => a.id).sort();
+  const ids = pool.selectCodexAccounts([], '  RESERVED-USER@example.com  ').map((a) => a.id).sort();
   assert.deepEqual(ids, [18, 21, 33]);
 });
 
@@ -106,7 +106,7 @@ test('blank reservation row does not turn an account into dead weight', () => {
   try {
     const idsOther = pool.selectCodexAccounts([], 'random@example.com').map((a) => a.id).sort();
     assert.deepEqual(idsOther, [18, 21], 'blank row must not exclude 21 for everyone');
-    const idsReserved = pool.selectCodexAccounts([], 'daxitm2112@gmail.com').map((a) => a.id).sort();
+    const idsReserved = pool.selectCodexAccounts([], 'reserved-user@example.com').map((a) => a.id).sort();
     assert.deepEqual(idsReserved, [18, 21, 33]);
   } finally {
     db.prepare("DELETE FROM codex_account_reservations WHERE account_id=21 AND TRIM(email)=''").run();

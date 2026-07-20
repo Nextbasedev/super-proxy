@@ -79,51 +79,61 @@ async function main() {
     }
   })();
 
-  // Custom dashboard shell — injects ?v=<buildId> into console.js / console.css
-  // and sends no-store so the HTML itself is never cached by any CDN. Other
-  // static assets fall through to fastifyStatic below.
-  const indexPath = path.join(process.cwd(), 'public', 'index.html');
-  const serveIndex = (_req: any, reply: any) => {
-    try {
-      const html = fs.readFileSync(indexPath, 'utf8')
-        .replace(/\/console\.js(\?[^"']*)?/g, `/console.js?v=${buildId}`)
-        .replace(/\/console\.css(\?[^"']*)?/g, `/console.css?v=${buildId}`);
-      reply.header('cache-control', 'no-store, no-cache, must-revalidate');
-      reply.type('text/html; charset=utf-8').send(html);
-    } catch (err: any) {
-      reply.code(500).send({ error: 'index.html missing', detail: String(err?.message || err) });
-    }
-  };
-  app.get('/', serveIndex);
-  app.get('/index.html', serveIndex);
-
-  app.addHook('onSend', async (req, reply, payload) => {
-    const urlPath = String(req.raw.url || '').split('?')[0];
-    if (urlPath.endsWith('.md')) {
-      reply.type('text/markdown; charset=utf-8');
-      reply.header('Cache-Control', 'public, max-age=300');
-    }
-    return payload;
-  });
-
-  await app.register(fastifyStatic, {
-    root: path.join(process.cwd(), 'public'),
-    prefix: '/',
-    index: false,
-    setHeaders: (res, filePath) => {
-      const base = path.basename(filePath);
-      // console.js / console.css are versioned via ?v=<buildId>. Tell CDNs they
-      // can cache aggressively per URL, and force revalidate when the version
-      // changes.
-      if (base === 'console.js' || base === 'console.css') {
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  // Optional dashboard/static shell (wave-2 apps/console). Provider API routes
+  // must still boot cleanly when public/ is absent from the OSS tree.
+  const publicRoot = path.join(process.cwd(), 'public');
+  const indexPath = path.join(publicRoot, 'index.html');
+  if (fs.existsSync(publicRoot)) {
+    const serveIndex = (_req: any, reply: any) => {
+      try {
+        const html = fs.readFileSync(indexPath, 'utf8')
+          .replace(/\/console\.js(\?[^"']*)?/g, `/console.js?v=${buildId}`)
+          .replace(/\/console\.css(\?[^"']*)?/g, `/console.css?v=${buildId}`);
+        reply.header('cache-control', 'no-store, no-cache, must-revalidate');
+        reply.type('text/html; charset=utf-8').send(html);
+      } catch (err: any) {
+        reply.code(500).send({ error: 'index.html missing', detail: String(err?.message || err) });
       }
-      if (path.extname(filePath) === '.md') {
-        res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
-        res.setHeader('Cache-Control', 'public, max-age=300');
+    };
+    app.get('/', serveIndex);
+    app.get('/index.html', serveIndex);
+
+    app.addHook('onSend', async (req, reply, payload) => {
+      const urlPath = String(req.raw.url || '').split('?')[0];
+      if (urlPath.endsWith('.md')) {
+        reply.type('text/markdown; charset=utf-8');
+        reply.header('Cache-Control', 'public, max-age=300');
       }
-    },
-  });
+      return payload;
+    });
+
+    await app.register(fastifyStatic, {
+      root: publicRoot,
+      prefix: '/',
+      index: false,
+      setHeaders: (res, filePath) => {
+        const base = path.basename(filePath);
+        // console.js / console.css are versioned via ?v=<buildId>. Tell CDNs they
+        // can cache aggressively per URL, and force revalidate when the version
+        // changes.
+        if (base === 'console.js' || base === 'console.css') {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+        if (path.extname(filePath) === '.md') {
+          res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+          res.setHeader('Cache-Control', 'public, max-age=300');
+        }
+      },
+    });
+  } else {
+    app.get('/', async (_req, reply) => {
+      reply.type('application/json').send({
+        ok: true,
+        service: process.env.GATEWAY_NAME || 'super-proxy',
+        docs: 'Provider routes are registered; dashboard static assets are not bundled in this build.',
+      });
+    });
+  }
 
   registerHealthRoutes(app);
   registerDashboardAuthRoutes(app);

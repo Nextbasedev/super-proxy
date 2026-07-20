@@ -42,7 +42,7 @@ function retryAfterMs(value: string | null): number {
 }
 
 // Transparent Anthropic passthrough. z.ai's GLM Coding Plan exposes an
-// Anthropic-compatible Messages endpoint, so a Claude-Code / OpenClaw Anthropic
+// Anthropic-compatible Messages endpoint, so a Claude Code / Anthropic-compatible clients
 // client request body is forwarded verbatim — only auth/host/length headers are
 // rewritten. We DO forward the client's own user-agent / anthropic-beta /
 // stainless headers untouched so the upstream request looks exactly like the
@@ -429,7 +429,7 @@ async function forwardGlm(req: any, reply: any) {
 }
 
 export function registerGlmProxy(app: FastifyInstance) {
-  // Standard Anthropic clients (Claude Code, OpenClaw anthropic provider) post to
+  // Standard Anthropic clients (Claude Code and other Anthropic clients) post to
   // `${ANTHROPIC_BASE_URL}/v1/messages`. With base `.../v1/glm` that resolves to
   // `/v1/glm/v1/messages`, so register that as the canonical path. Keep the short
   // `/v1/glm/messages` form as an alias for direct callers.

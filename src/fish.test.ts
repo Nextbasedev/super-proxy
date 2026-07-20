@@ -18,7 +18,7 @@ function resetTables() {
   db.prepare('DELETE FROM usage_events').run();
   db.prepare('DELETE FROM api_tokens').run();
   db.prepare('DELETE FROM user_provider_access_modes').run();
-  db.prepare('DELETE FROM users WHERE email != ?').run('daxitm2112@gmail.com');
+  db.prepare('DELETE FROM users WHERE email != ?').run('admin@localhost');
   db.prepare('DELETE FROM provider_accounts').run();
 }
 

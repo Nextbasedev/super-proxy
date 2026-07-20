@@ -3,7 +3,7 @@
  *
  * Source: projects/openclaw-billing-proxy/proxy.js v2.2.3
  * Imported on 2026-05-07 to make Anthropic OAuth (sk-ant-oat01-*) tokens work
- * through Nextbase Model Gateway by emulating Claude Code traffic.
+ * through Super Proxy by emulating Claude Code traffic.
  *
  * Implements the multi-layer transform required to defeat Anthropic's OpenClaw
  * detection (string triggers, tool-name fingerprinting, system prompt template,

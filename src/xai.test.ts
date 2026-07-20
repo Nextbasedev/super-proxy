@@ -27,7 +27,7 @@ function resetRuntimeTables() {
   db.prepare('DELETE FROM user_model_denies').run();
   db.prepare('DELETE FROM user_grants').run();
   db.prepare('DELETE FROM api_tokens').run();
-  db.prepare('DELETE FROM users WHERE email != ?').run('daxitm2112@gmail.com');
+  db.prepare('DELETE FROM users WHERE email != ?').run('admin@localhost');
   db.prepare('DELETE FROM provider_accounts').run();
 }
 

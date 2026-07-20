@@ -113,7 +113,7 @@ test('admin sees every canonical provider model and Fusion presets without dupli
     new Set(expected.map((model) => `${model.provider}/${model.id}`)),
   );
 
-  const fusionIds = body.data.filter((model: any) => model.owned_by === 'nextbase-fusion').map((model: any) => model.id);
+  const fusionIds = body.data.filter((model: any) => model.owned_by === 'fusion').map((model: any) => model.id);
   assert.deepEqual(fusionIds, ['fusion/max', 'fusion/quality', 'fusion/budget', 'fusion/my-preset'], 'must not leak other users\' presets');
   assert.equal(new Set(body.data.map((model: any) => model.catalog_id).filter(Boolean)).size, canonical.length);
   await app.close();
@@ -125,7 +125,7 @@ test('GET /v1/models omits a legacy preset with object-valued panel JSON without
   assert.equal(response.statusCode, 200, response.body);
   assert.equal(response.headers['cache-control'], 'private, no-store');
   const fusionIds = response.json().data
-    .filter((model: any) => model.owned_by === 'nextbase-fusion')
+    .filter((model: any) => model.owned_by === 'fusion')
     .map((model: any) => model.id);
   assert.ok(!fusionIds.includes('fusion/corrupt-object-panel'));
   await app.close();
@@ -150,7 +150,7 @@ test('restricted user sees exactly policy-allowed canonical models', async () =>
   assert.ok(!canonicalIds.includes('openai_codex/gpt-5.5'));
   assert.ok(!canonicalIds.includes('gemini/gemini-embedding-001'));
   assert.ok(!canonicalIds.some((id: string) => id.startsWith('anthropic/')));
-  assert.deepEqual(body.data.filter((model: any) => model.owned_by === 'nextbase-fusion'), [], 'Fusion deny_all must remove built-ins and saved presets');
+  assert.deepEqual(body.data.filter((model: any) => model.owned_by === 'fusion'), [], 'Fusion deny_all must remove built-ins and saved presets');
   await app.close();
 });
 
@@ -158,7 +158,7 @@ test('Fusion listings require alias authorization plus exact route and panel/syn
   const app = await buildApp();
   const response = await app.inject({ method: 'GET', url: '/v1/models', headers: bearer(fusionLimited.token) });
   assert.equal(response.statusCode, 200, response.body);
-  const fusion = response.json().data.filter((model: any) => model.owned_by === 'nextbase-fusion');
+  const fusion = response.json().data.filter((model: any) => model.owned_by === 'fusion');
   assert.deepEqual(fusion.map((model: any) => model.id), ['fusion/allowed-preset']);
   assert.ok(Array.isArray(fusion[0].interfaces));
   assert.equal(fusion[0].interfaces[0].path, '/v1/fusion/chat/completions');

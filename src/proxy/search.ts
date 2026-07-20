@@ -219,11 +219,11 @@ async function handleSerpSearch(req: any, reply: any, auth: any, body: any, quer
   }
 }
 
-// SearXNG-compatible adapter: lets OpenClaw's built-in `web_search` provider
+// SearXNG-compatible adapter: lets SearXNG-compatible `web_search` clients
 // (`searxng`, the only one accepting an arbitrary base URL with no API key)
 // route through NBMG to our real Serper Google SERP, fully metered.
 //
-// Contract (from OpenClaw's compiled searxng client):
+// Contract (from the SearXNG client contract):
 //  - GET, path must end in `/search` (client blindly appends it to baseUrl).
 //  - Auth must live in the URL PATH (`:token`), because the client wipes the
 //    query string of the configured baseUrl and sends no Authorization header.
@@ -304,7 +304,7 @@ async function handleSearxngAdapter(req: any, reply: any) {
     }
     const parsed = JSON.parse(responseText || '{}');
     const norm = normalizeSerperResults(parsed, limit);
-    // Remap to SearXNG shape: snippet -> content (the field OpenClaw reads).
+    // Remap to SearXNG shape: snippet -> content (the field SearXNG clients read).
     const results = norm.map((r: any) => ({
       url: r.url,
       title: r.title,

@@ -43,7 +43,7 @@ function fusionModelListing(alias: string, created: number): Record<string, unkn
     id: `fusion/${alias}`,
     object: 'model',
     created,
-    owned_by: 'nextbase-fusion',
+    owned_by: 'fusion',
     provider: 'fusion',
     endpoint: catalog.endpoint,
     api: catalog.api,
