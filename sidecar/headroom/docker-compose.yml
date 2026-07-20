@@ -1,0 +1,33 @@
+# Headroom context-compression sidecar for NBMG.
+# Runs alongside the gateway. In production, prefer the main model-gateway
+# docker-compose stack and set HEADROOM_URL=http://headroom-proxy:8899.
+#
+# This standalone compose is for local/manual testing only. It publishes the
+# adapter on loopback so curl http://127.0.0.1:8899/health works without exposing
+# the sidecar publicly.
+#
+# Start:  cd sidecar/headroom && docker compose up -d
+# Health: curl http://127.0.0.1:8899/health
+# Logs:   docker logs headroom-proxy  OR  tail -f /var/log/headroom/proxy.jsonl
+
+services:
+  headroom-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: headroom-proxy
+    ports:
+      - "127.0.0.1:8899:8899"
+    environment:
+      - HEADROOM_TELEMETRY=off
+      - HEADROOM_OUTPUT_SHAPER=1
+      - HEADROOM_SKIP_UPSTREAM_CHECK=1
+    volumes:
+      - headroom-logs:/var/log/headroom
+      - headroom-data:/root/.headroom
+    mem_limit: 2g
+    restart: unless-stopped
+
+volumes:
+  headroom-logs:
+  headroom-data:
