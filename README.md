@@ -1,3 +1,4 @@
+<img width="1672" height="941" alt="f1ba00cc-3627-49fd-abb2-353f88d9e666" src="https://github.com/user-attachments/assets/b2a06d91-eb5e-42bd-a9ff-73d7445478b7" />
 # Super Proxy
 
 **Open-source multi-provider AI gateway.**
